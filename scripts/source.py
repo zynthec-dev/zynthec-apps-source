@@ -95,12 +95,18 @@ def merge(catalog, app, digest):
         app['appPermissions']['privacy'] = {**old['app']['appPermissions']['privacy'], **app['appPermissions']['privacy']}
     catalog[key] = {'sha256': digest, 'app': app}
 
+def is_own_app(app):
+    # Own application is distributed separately from the third-party source.
+    bundle = app.get('bundleIdentifier', '').lower()
+    roots = ('com.zynthec.zynthecapp', 'com.zynthec.zynthecstore', 'com.zynthec.zmanager')
+    return any(bundle == root or bundle.startswith(root + '.') for root in roots)
+
 def render(catalog):
     overrides = read(ROOT / 'apps.json', {})
     apps = []
     for key, record in sorted(catalog.items(), key=lambda item: item[1]['app']['name'].lower()):
         settings = overrides.get(key, {})
-        if settings.get('enabled', True) is False:
+        if is_own_app(record['app']) or settings.get('enabled', True) is False:
             continue
         app = {**record['app'], **{k:v for k,v in settings.items() if k != 'enabled'}}
         latest = app['versions'][0]

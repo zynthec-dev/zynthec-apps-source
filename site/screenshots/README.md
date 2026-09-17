@@ -1,0 +1,1 @@
+Actual unedited simulator captures, 2026-09-17. iPhone 18 Pro Max, iOS 27.0. App: zManager 0.1.0 (1), com.zynthec.zynthecStore.J9XAH3MN77. Existing Debug simulator build launched from DerivedData/zynthecApp; captured with simctl. These images document the running build, not unbuilt working-tree changes. No credentials or personal files are visible.

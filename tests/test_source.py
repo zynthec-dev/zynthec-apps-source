@@ -26,11 +26,25 @@ class SourceTests(unittest.TestCase):
         self.assertEqual([v['buildVersion'] for v in catalog['test']['app']['versions']],['2','1'])
         app['versions'][0] = {'version':'0.9','buildVersion':'9'}
         with self.assertRaises(ValueError): source.merge(catalog, app, 'd')
+    def test_own_app_excluded_from_feed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            original = source.ROOT
+            source.ROOT = pathlib.Path(tmp)
+            try:
+                def entry(bundle):
+                    return {'app': {'name': bundle, 'bundleIdentifier': bundle, 'versions': [{'version':'1', 'date':'2026-09-17', 'downloadURL':'https://example.org/app.ipa', 'size':1}]}}
+                ids = ['com.zynthec.zynthecApp', 'com.zynthec.zynthecStore.J9XAH3MN77', 'com.zynthec.zManager', 'com.zynthec.mipet', 'org.example.other']
+                source.render({key: entry(key) for key in ids})
+                actual = json.loads((source.ROOT/'source.json').read_text())
+                self.assertEqual({a['bundleIdentifier'] for a in actual['apps']}, set(ids[-2:]))
+            finally:
+                source.ROOT = original
+
     def test_published_catalog(self):
         data = json.loads((ROOT/'source.json').read_text())
         settings = json.loads((ROOT/'apps.json').read_text())
         catalog = json.loads((ROOT/'catalog/apps.json').read_text())
-        self.assertEqual(len(data['apps']),sum(settings.get(k,{}).get('enabled',True) is not False for k in catalog))
+        self.assertEqual(len(data['apps']),sum(not source.is_own_app(v['app']) and settings.get(k,{}).get('enabled',True) is not False for k,v in catalog.items()))
         ids = [app['bundleIdentifier'] for app in data['apps']]
         self.assertEqual(len(ids),len(set(ids)))
         for app in data['apps']:
