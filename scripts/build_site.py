@@ -7,11 +7,7 @@ root = pathlib.Path(__file__).resolve().parent.parent
 out = root / 'dist'
 if out.exists(): shutil.rmtree(out)
 shutil.copytree(root / 'site', out)
-(out / '_redirects').write_text('''/admin.html /admin 302
-https://sideload.zynthec.com/ https://app.zynthec.com/ 302
-https://sideload.zynthec.com/admin https://app.zynthec.com/admin 302
-https://sideload.zynthec.com/install https://app.zynthec.com/install 302
-''')
+(out / '_redirects').write_text('/admin.html /admin 302\n')
 shutil.copytree(root / 'assets', out / 'assets')
 for name in ['source.json', 'icon.png']:
     shutil.copyfile(root / name, out / name)
