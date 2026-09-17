@@ -6,3 +6,9 @@
 /source.json
   Content-Type: application/json; charset=utf-8
   Cache-Control: public, max-age=300
+/admin
+  Cache-Control: no-store
+/admin.html
+  Cache-Control: no-store
+/admin.js
+  Cache-Control: no-store

@@ -5,6 +5,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 REPO = 'zynthec-dev/zynthec-ios-app-source'
 BASE = 'https://sideload.zynthec.com'
 
+def hash_file(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
 def read(path, default):
     return json.loads(path.read_text()) if path.exists() else default
 
@@ -34,7 +41,7 @@ def entitlements(binary):
     return result
 
 def inspect_ipa(path, url, date):
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    digest = hash_file(path)
     with zipfile.ZipFile(path) as z:
         roots = [n for n in z.namelist() if re.fullmatch(r'Payload/[^/]+\.app/Info.plist', n)]
         if len(roots) != 1:
@@ -92,7 +99,10 @@ def render(catalog):
     overrides = read(ROOT / 'apps.json', {})
     apps = []
     for key, record in sorted(catalog.items(), key=lambda item: item[1]['app']['name'].lower()):
-        app = {**record['app'], **overrides.get(key, {})}
+        settings = overrides.get(key, {})
+        if settings.get('enabled', True) is False:
+            continue
+        app = {**record['app'], **{k:v for k,v in settings.items() if k != 'enabled'}}
         latest = app['versions'][0]
         app.update(version=latest['version'], versionDate=latest['date'], downloadURL=latest['downloadURL'], size=latest['size'])
         apps.append(app)
@@ -110,7 +120,7 @@ def import_local(publish=False):
         release = json.loads(gh('release', 'view', 'apps', '--repo', REPO, '--json', 'assets'))
         uploaded = {a['name']: a for a in release['assets']}
     for path in sorted((ROOT / 'ipa').glob('*.ipa')):
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        digest = hash_file(path)
         asset = digest[:16] + '.ipa'
         if any(x['sha256'] == digest for x in catalog.values()):
             if publish and asset not in uploaded:

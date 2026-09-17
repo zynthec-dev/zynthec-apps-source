@@ -8,6 +8,35 @@ Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 - GitHub Pages: https://zynthec-dev.github.io/zynthec-ios-app-source/
 - IPAs: https://github.com/zynthec-dev/zynthec-ios-app-source/releases/tag/apps
 
+## Online-Verwaltung
+
+Öffne **https://sideload.zynthec.com/admin**. Die Anmeldung verwendet einen
+GitHub Fine-grained personal access token für `zynthec-dev`, beschränkt auf
+`zynthec-ios-app-source`, mit **Contents: Read and write** und
+**Actions: Read and write**. Eine Anleitung steht direkt auf der Login-Seite.
+Der Schlüssel bleibt nur im Arbeitsspeicher des Tabs und wird über die eigene
+Cloudflare-API an GitHub weitergereicht. Kein Passwort und kein Schlüssel wird
+serverseitig gespeichert. Nach Neuladen des Tabs erneut anmelden.
+
+- **Hinzufügen / Update:** „App hinzufügen“ → IPA bis 512 MB auswählen →
+  „Hochladen & veröffentlichen“. Metadaten und Icons werden automatisch gelesen.
+- **Entfernen:** „Entfernen“ blendet die App aus Source und Website aus.
+  „Wiederherstellen“ macht sie wieder sichtbar. Installationen und Release-Dateien
+  werden nicht gelöscht. Der Status bleibt auch bei SideInstaller-Updates erhalten.
+- **Bearbeiten:** Name, Entwickler, Beschreibung und Kategorie direkt ändern.
+- **Status:** Unter „Veröffentlichungen“ den Workflow prüfen. Neue Apps und
+  Änderungen erscheinen nach dem Build; anschließend die Source im iPhone aktualisieren.
+
+Uploads gehen in 16-MB-Abschnitten in den nicht veröffentlichten GitHub-Release-Entwurf
+`admin-uploads`. SHA-256-Prüfsummen prüfen jeden Abschnitt. GitHub Actions setzt die
+IPA zusammen und veröffentlicht den vollständigen Download erst nach erfolgreicher
+Metadatenprüfung. Fehlgeschlagene oder abgeschlossene Uploadteile bleiben im Entwurf
+für eine mögliche Wiederherstellung und können dort bei Bedarf manuell gelöscht werden.
+Der öffentliche `/admin`-Bildschirm enthält keine Zugangsdaten. Jede API-Anfrage
+prüft Origin, GitHub-Konto und Repository-Schreibrecht. Änderungen an Texten nutzen
+GitHubs Dateiversion zur Konflikterkennung. GitHub-Pages-Besucher werden für die
+Verwaltung auf die Cloudflare-Domain verwiesen.
+
 ## Neue Apps und Updates
 
 Auf macOS mit Python 3 und GitHub CLI (`brew install gh`, danach `gh auth login`):
@@ -47,12 +76,12 @@ ab. GitHub kann Zeitpläne verzögert ausführen und bei inaktiven öffentlichen
 ## Hosting und Entwicklung
 
 Cloudflare Pages: Projekt `zynthec-ios-app-source`, Branch `main`, Build-Befehl
-`python3 scripts/build_site.py`, Ausgabeordner `dist`, Custom Domain
+`python3 scripts/source.py render && python3 scripts/build_site.py`, Ausgabeordner `dist`, Custom Domain
 `sideload.zynthec.com`. DNS: proxied CNAME auf `zynthec-ios-app-source.pages.dev`.
 GitHub Pages wird zusätzlich über den Workflow veröffentlicht.
 
 Lokal: `python3 scripts/build_site.py && python3 -m http.server 8080 --directory dist`.
-Keine Python-Pakete oder npm-Abhängigkeiten erforderlich. `source.json` ist generiert;
+Keine Python-Pakete oder npm-Abhängigkeiten erforderlich. Die Admin-API unter `functions/api/` läuft nur auf Cloudflare Pages. Tests: `python3 -m unittest discover -s tests -v` und `node --test tests/admin-api.test.mjs`. `source.json` ist generiert;
 App-Texte in `apps.json` bearbeiten. `catalog/` enthält den Versionsverlauf und den
 zuletzt synchronisierten SideInstaller-Release. `icon.png` ist das Source-Icon.
 

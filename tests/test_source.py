@@ -28,7 +28,9 @@ class SourceTests(unittest.TestCase):
         with self.assertRaises(ValueError): source.merge(catalog, app, 'd')
     def test_published_catalog(self):
         data = json.loads((ROOT/'source.json').read_text())
-        self.assertGreaterEqual(len(data['apps']),7)
+        settings = json.loads((ROOT/'apps.json').read_text())
+        catalog = json.loads((ROOT/'catalog/apps.json').read_text())
+        self.assertEqual(len(data['apps']),sum(settings.get(k,{}).get('enabled',True) is not False for k in catalog))
         ids = [app['bundleIdentifier'] for app in data['apps']]
         self.assertEqual(len(ids),len(set(ids)))
         for app in data['apps']:
