@@ -11,8 +11,8 @@ class SiteTests(unittest.TestCase):
         self.assertNotIn('id="login-form"',html)
         self.assertIn('id="login-form"',(out/'admin.html').read_text())
         self.assertTrue((out/'source.json').exists())
-        self.assertNotIn('downloadURL',(out/'app.js').read_text())
-        self.assertNotIn('IPA herunterladen',(out/'app.js').read_text())
+        self.assertNotIn('downloadURL',(out/'landing-v2.js').read_text())
+        self.assertNotIn('IPA herunterladen',(out/'landing-v2.js').read_text())
         for scheme in ['altstore','sidestore','livecontainer']:
             self.assertIn(scheme+'://source?url=https%3A%2F%2Fsideload.zynthec.com%2Fsource.json',html)
     def test_profile_only_contains_removable_webclip(self):
