@@ -17,5 +17,6 @@ if args.base_path:
         text = file.read_text().replace('https://sideload.zynthec.com/source.json', 'https://zynthec-dev.github.io/zynthec-ios-app-source/source-github.json')
         text = text.replace('https%3A%2F%2Fsideload.zynthec.com%2Fsource.json', 'https%3A%2F%2Fzynthec-dev.github.io%2Fzynthec-ios-app-source%2Fsource-github.json')
         text = text.replace("fetch('./source.json')", "fetch('./source-github.json')")
+        text = text.replace('href="' + args.base_path + '/source.json"', 'href="' + args.base_path + '/source-github.json"')
         file.write_text(text)
 print('Built dist/')
