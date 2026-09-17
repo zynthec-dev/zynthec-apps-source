@@ -5,7 +5,7 @@ Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 - Landingpage und Bibliothek: https://sideload.zynthec.com
 - Verwaltung: https://sideload.zynthec.com/admin
 - Source: https://sideload.zynthec.com/source.json
-- IPAs: https://github.com/zynthec-dev/zynthec-ios-app-source/releases/tag/apps
+- IPAs: https://github.com/zynthec-dev/zynthec-ios-sideload-source/releases/tag/apps
 
 ## Online-Verwaltung
 
@@ -14,7 +14,7 @@ Die öffentliche Landingpage zeigt zynthecApp sowie die Bibliothek ohne direkte 
 Der öffentliche Source-Feed enthält weiterhin die für Sideloading-Tools benötigten Download-URLs.
 `/install.html` erklärt den vorbereiteten Installationsweg; das Web-Clip-Profil installiert noch keine App. Die Anmeldung verwendet einen
 GitHub Fine-grained personal access token für `zynthec-dev`, beschränkt auf
-`zynthec-ios-app-source`, mit **Contents: Read and write** und
+`zynthec-ios-sideload-source`, mit **Contents: Read and write** und
 **Actions: Read and write**. Eine Anleitung steht direkt auf der Login-Seite.
 Der Schlüssel bleibt nur im Arbeitsspeicher des Tabs und wird über die eigene
 Cloudflare-API an GitHub weitergereicht. Kein Passwort und kein Schlüssel wird
@@ -77,9 +77,9 @@ ab. GitHub kann Zeitpläne verzögert ausführen und bei inaktiven öffentlichen
 
 ## Hosting und Entwicklung
 
-Cloudflare Pages: Projekt `zynthec-ios-app-source`, Branch `main`, Build-Befehl
+Cloudflare Pages: Projekt `zynthec-ios-sideload-source`, Branch `main`, Build-Befehl
 `python3 scripts/source.py render && python3 scripts/build_site.py`, Ausgabeordner `dist`, Custom Domain
-`sideload.zynthec.com`. DNS: proxied CNAME auf `zynthec-ios-app-source.pages.dev`.
+`sideload.zynthec.com`. DNS: proxied CNAME auf `zynthec-ios-sideload-source.pages.dev`.
 GitHub Pages wird zusätzlich über den Workflow veröffentlicht.
 
 Lokal: `python3 scripts/build_site.py && python3 -m http.server 8080 --directory dist`.
