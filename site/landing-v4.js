@@ -2,7 +2,8 @@ const sourceURL = 'https://app.zynthec.com/source.json';
 const container = document.querySelector('#apps');
 const sourceDialog = document.querySelector('#source-dialog');
 const appDialog = document.querySelector('#app-dialog');
-let apps = [];
+const ownApp = {name:'zynthecApp', developerName:'zynthec', iconURL:'/icon.png', category:'utilities', inDevelopment:true, localizedDescription:'Dateien, Sideloading und Werkzeuge an einem Ort. zynthecApp befindet sich in Entwicklung; eine signierte Installationsversion ist noch in Vorbereitung.'};
+let apps = [ownApp];
 let filter = 'all';
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -32,6 +33,12 @@ function showApp(app) {
   const detail = document.querySelector('#app-detail');
   const developer = app.developerName === 'Entwickler der jeweiligen App' ? 'Aus der zynthec Sammlung' : app.developerName;
   detail.replaceChildren(iconFor(app, 'dialog-icon'), element('p', 'eyebrow', category(app) === 'utilities' ? 'TOOLS FÜR DEIN IPHONE' : 'AUS DEINER SAMMLUNG'), element('h2', '', app.name), element('p', 'detail-developer', developer));
+  if (app.inDevelopment) {
+    const link = element('a','button primary','zynthecApp entdecken');
+    link.href = '#app'; link.addEventListener('click',()=>appDialog.close());
+    detail.append(element('p','dialog-description',description(app)),link,element('p','detail-note','In Entwicklung · Noch nicht zur Installation verfügbar.'));
+    appDialog.showModal(); return;
+  }
   const facts = element('div', 'detail-facts');
   for (const [label,value] of [['VERSION',version.version],['MINDESTENS',version.minOSVersion ? `iOS ${version.minOSVersion}` : 'Keine Angabe'],['GRÖSSE',`${(version.size/1048576).toLocaleString('de-DE',{maximumFractionDigits:1})} MB`]]) {
     const fact = element('div'); fact.append(element('span','',label),element('b','',value)); facts.append(fact);
@@ -50,10 +57,10 @@ function render() {
     const version = app.versions?.[0] || app;
     const card = element('article', 'app');
     const top = element('div', 'app-top');
-    top.append(iconFor(app),element('span','app-type',app.name === 'SideInstaller' ? 'Automatisch aktuell' : category(app) === 'utilities' ? 'Utilities' : 'Entdecken'));
+    top.append(iconFor(app),element('span','app-type',app.inDevelopment ? 'In Entwicklung' : app.name === 'SideInstaller' ? 'Automatisch aktuell' : category(app) === 'utilities' ? 'Utilities' : 'Entdecken'));
     const bottom = element('div', 'app-bottom');
     const details = element('button','details-button','Ansehen ↗'); details.setAttribute('aria-label',`${app.name} ansehen`); details.addEventListener('click',()=>showApp(app));
-    bottom.append(element('span','app-meta',`v${version.version} · ${version.minOSVersion ? `ab iOS ${version.minOSVersion}` : 'iOS'}`),details);
+    bottom.append(element('span','app-meta',app.inDevelopment ? 'In Entwicklung' : `v${version.version} · ${version.minOSVersion ? `ab iOS ${version.minOSVersion}` : 'iOS'}`),details);
     card.append(top,element('h3','',app.name),element('p','app-description',description(app)),bottom);
     container.append(card);
   }
@@ -77,12 +84,14 @@ document.querySelector('#copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(sourceURL); document.querySelector('#copy-status').textContent = 'Source-URL kopiert.'; }
   catch { document.querySelector('#source-url').select(); document.querySelector('#copy-status').textContent = 'URL markiert. Bitte manuell kopieren.'; }
 });
+function updateCount() { document.querySelector('#count').textContent = `${apps.length} ${apps.length === 1 ? 'App' : 'Apps'} in der Bibliothek`; }
+updateCount(); render();
 fetch('./source.json').then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); })
   .then(source => {
-    apps = Array.isArray(source.apps) ? source.apps : []; document.querySelector('#count').textContent = `${apps.length} Apps in deiner Source`; render();
+    apps = [ownApp, ...(Array.isArray(source.apps) ? source.apps : [])]; updateCount(); render();
 
   })
-  .catch(() => { container.replaceChildren(element('p', 'empty-state', 'Der Katalog konnte nicht geladen werden. Bitte lade die Seite erneut.')); })
+  .catch(() => { container.append(element('p', 'empty-state', 'Weitere Apps konnten nicht geladen werden. Bitte lade die Seite erneut.')); })
   .finally(()=>container.setAttribute('aria-busy','false'));
 
 const pageForHash = {start:'start',source:'start',app:'app',features:'app',screenshots:'app',install:'app',library:'library',collection:'library'};
