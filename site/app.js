@@ -12,7 +12,7 @@ function element(tag, className, text) {
 }
 function iconFor(app, className = 'app-icon') {
   const icon = element('img', className);
-  icon.src = app.iconURL.replace('https://sideload.zynthec.com/', './');
+  try { const url = new URL(app.iconURL, location.href); icon.src = url.origin === 'https://sideload.zynthec.com' ? url.pathname : url.origin === location.origin ? url.href : '/icon.png'; } catch { icon.src = '/icon.png'; }
   icon.alt = ''; icon.loading = 'lazy';
   return icon;
 }
@@ -28,7 +28,7 @@ document.querySelectorAll('dialog').forEach(dialog => {
   dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if(event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
 });
 function showApp(app) {
-  const version = app.versions[0];
+  const version = app.versions?.[0] || app;
   const detail = document.querySelector('#app-detail');
   const developer = app.developerName === 'Entwickler der jeweiligen App' ? 'Aus der zynthec Sammlung' : app.developerName;
   detail.replaceChildren(iconFor(app, 'dialog-icon'), element('p', 'eyebrow', category(app) === 'utilities' ? 'TOOLS FÜR DEIN IPHONE' : 'AUS DEINER SAMMLUNG'), element('h2', '', app.name), element('p', 'detail-developer', developer));
@@ -38,9 +38,8 @@ function showApp(app) {
   }
   const actions = element('div', 'detail-actions');
   const add = element('button', 'button primary', 'Source hinzufügen ＋'); add.addEventListener('click', showSource);
-  const download = element('a','button secondary','IPA herunterladen ↓'); download.href = version.downloadURL;
-  actions.append(add,download);
-  detail.append(facts,element('p','dialog-description',app.localizedDescription),actions,element('p','detail-note','Installiere die App über SideStore oder AltStore Classic. Der IPA-Download allein installiert die App nicht.'));
+  actions.append(add);
+  detail.append(facts,element('p','dialog-description',description(app)),actions,element('p','detail-note','Installation über dein kompatibles Sideloading-Tool. Hier werden ausschließlich App-Informationen angezeigt.'));
   appDialog.showModal();
 }
 function render() {
@@ -48,7 +47,7 @@ function render() {
   const visible = apps.filter(app => `${app.name} ${app.developerName}`.toLocaleLowerCase().includes(query) && (filter === 'all' || (filter === 'utilities' ? category(app) === 'utilities' : category(app) !== 'utilities')));
   container.replaceChildren();
   for (const app of visible) {
-    const version = app.versions[0];
+    const version = app.versions?.[0] || app;
     const card = element('article', 'app');
     const top = element('div', 'app-top');
     top.append(iconFor(app),element('span','app-type',app.name === 'SideInstaller' ? 'Automatisch aktuell' : category(app) === 'utilities' ? 'Utilities' : 'Entdecken'));
@@ -76,7 +75,7 @@ document.querySelector('#copy').addEventListener('click', async () => {
 });
 fetch('./source.json').then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); })
   .then(source => {
-    apps = source.apps; document.querySelector('#count').textContent = `${apps.length} Apps in deiner Source`; render();
+    apps = Array.isArray(source.apps) ? source.apps : []; document.querySelector('#count').textContent = `${apps.length} Apps in deiner Source`; render();
     for (const app of [...apps].sort((a,b)=>(a.name==='miPet'?-1:b.name==='miPet'?1:0)).slice(0,3)) {
       const row=element('div','mini-app');row.append(iconFor(app,''),element('b','',app.name),element('span','',`v${app.versions[0].version}`));document.querySelector('#mini-apps').append(row);
     }

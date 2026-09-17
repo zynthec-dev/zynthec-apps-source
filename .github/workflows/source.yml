@@ -1,4 +1,4 @@
-name: Update source and publish GitHub Pages
+name: Update source for Cloudflare
 on:
   push:
     branches: [main]
@@ -12,8 +12,6 @@ on:
         type: string
 permissions:
   contents: write
-  pages: write
-  id-token: write
 concurrency:
   group: source-publish
   cancel-in-progress: false
@@ -60,16 +58,4 @@ jobs:
             git push
           fi
       - name: Build website
-        run: python3 scripts/build_site.py --base-path /zynthec-ios-app-source
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-  pages:
-    needs: source
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/deploy-pages@v4
-        id: deployment
+        run: python3 scripts/build_site.py

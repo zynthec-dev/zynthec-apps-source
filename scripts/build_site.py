@@ -7,16 +7,10 @@ root = pathlib.Path(__file__).resolve().parent.parent
 out = root / 'dist'
 if out.exists(): shutil.rmtree(out)
 shutil.copytree(root / 'site', out)
+(out / '_redirects').write_text('/admin.html /admin 302\n')
 shutil.copytree(root / 'assets', out / 'assets')
-for name in ['source.json', 'source-github.json', 'icon.png']:
+for name in ['source.json', 'icon.png']:
     shutil.copyfile(root / name, out / name)
 if args.base_path:
-    for page in out.glob('*.html'):
-        page.write_text(page.read_text().replace('href="/', 'href="' + args.base_path + '/').replace('src="/', 'src="' + args.base_path + '/'))
-    for file in [out / 'index.html', out / 'app.js']:
-        text = file.read_text().replace('https://sideload.zynthec.com/source.json', 'https://zynthec-dev.github.io/zynthec-ios-app-source/source-github.json')
-        text = text.replace('https%3A%2F%2Fsideload.zynthec.com%2Fsource.json', 'https%3A%2F%2Fzynthec-dev.github.io%2Fzynthec-ios-app-source%2Fsource-github.json')
-        text = text.replace("fetch('./source.json')", "fetch('./source-github.json')")
-        text = text.replace('href="' + args.base_path + '/source.json"', 'href="' + args.base_path + '/source-github.json"')
-        file.write_text(text)
-print('Built dist/')
+    raise SystemExit('Only root-domain Cloudflare publishing is supported.')
+print('Built landing page, library and admin dist/')

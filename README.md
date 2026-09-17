@@ -2,15 +2,17 @@
 
 Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 
-- Website: https://sideload.zynthec.com
+- Landingpage und Bibliothek: https://sideload.zynthec.com
+- Verwaltung: https://sideload.zynthec.com/admin
 - Source: https://sideload.zynthec.com/source.json
-- GitHub-Source: https://zynthec-dev.github.io/zynthec-ios-app-source/source-github.json
-- GitHub Pages: https://zynthec-dev.github.io/zynthec-ios-app-source/
 - IPAs: https://github.com/zynthec-dev/zynthec-ios-app-source/releases/tag/apps
 
 ## Online-Verwaltung
 
-Öffne **https://sideload.zynthec.com/admin**. Die Anmeldung verwendet einen
+Öffne **https://sideload.zynthec.com/admin**.
+Die öffentliche Landingpage zeigt zynthecApp sowie die Bibliothek ohne direkte IPA-Downloadbuttons.
+Der öffentliche Source-Feed enthält weiterhin die für Sideloading-Tools benötigten Download-URLs.
+`/install.html` erklärt den vorbereiteten Installationsweg; das Web-Clip-Profil installiert noch keine App. Die Anmeldung verwendet einen
 GitHub Fine-grained personal access token für `zynthec-dev`, beschränkt auf
 `zynthec-ios-app-source`, mit **Contents: Read and write** und
 **Actions: Read and write**. Eine Anleitung steht direkt auf der Login-Seite.
