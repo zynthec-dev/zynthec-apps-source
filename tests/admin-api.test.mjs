@@ -18,5 +18,6 @@ test('settings reject source URLs, executable fields and prototype properties',(
  for(const field of ['downloadURL','versions','constructor','__proto__'])assert.throws(()=>validateSettings({'test.app':JSON.parse(`{"${field}":"evil"}`)}));
  assert.throws(()=>validateSettings({'test.app':{category:'bad'}}));
  assert.throws(()=>validateSettings({'test.app':{enabled:'false'}}));
+ assert.throws(()=>validateSettings({'test.app':{name:'  '}}));
 });
 test('upstream conflicts remain conflicts rather than overwriting',async()=>{const saved=globalThis.fetch;globalThis.fetch=async url=>url.endsWith('/user')?Response.json({login:'zynthec-dev'}):url.endsWith('/contents/apps.json')?Response.json({message:'conflict'},{status:409}):Response.json({permissions:{push:true}});try{assert.equal((await onRequest(request('settings',{body:{sha:'a'.repeat(40),settings:{}}}))).status,409);}finally{globalThis.fetch=saved;}});

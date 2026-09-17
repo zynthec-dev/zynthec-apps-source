@@ -19,7 +19,7 @@ function validateSettings(data) {
     const row=Object.create(null);
     for(const [key,value] of Object.entries(values)){
       if(key==='enabled'){if(typeof value!=='boolean')throw new APIError('Ungültiger Status.');row.enabled=value;}
-      else if(Object.hasOwn(fields,key)){if(typeof value!=='string'||value.length>fields[key])throw new APIError('Ungültiger App-Text.');if(key==='category'&&!['utilities','other','entertainment','games','lifestyle','photo-video','social','developer'].includes(value))throw new APIError('Ungültige Kategorie.');row[key]=value;}
+      else if(Object.hasOwn(fields,key)){if(typeof value!=='string'||value.length>fields[key])throw new APIError('Ungültiger App-Text.');if(['name','developerName'].includes(key)&&!value.trim())throw new APIError('Name und Entwickler dürfen nicht leer sein.');if(key==='category'&&!['utilities','other','entertainment','games','lifestyle','photo-video','social','developer'].includes(value))throw new APIError('Ungültige Kategorie.');row[key]=value;}
       else throw new APIError('Nicht erlaubtes App-Feld.');
     }
     result[id]=row;

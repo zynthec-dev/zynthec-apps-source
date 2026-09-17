@@ -19,7 +19,7 @@ function iconFor(app, className = 'app-icon') {
 function category(app) { return app.category || (/sign|scarlet|feather|sideinstaller/i.test(app.name) ? 'utilities' : 'other'); }
 function description(app) {
   const descriptions = {ESign:'Signieren. Installieren. Direkt auf deinem iPhone.',Feather:'Deine Apps signieren und installieren. Alles an einem Ort.',Ksign:'Ein weiteres Tool für deine App-Sammlung.',Scarlet:'Neue Möglichkeiten für deine iOS-Apps.',SideInstaller:'Apps installieren. Mit automatisch geprüften Releases.'};
-  return descriptions[app.name] || app.localizedDescription;
+  return app.localizedDescription === 'Bereitgestellt in der zynthec Apps Source.' ? (descriptions[app.name] || app.localizedDescription) : app.localizedDescription;
 }
 function showSource() { appDialog.close(); document.querySelector('#copy-status').textContent = ''; sourceDialog.showModal(); }
 document.querySelectorAll('[data-add-source]').forEach(button => button.addEventListener('click', showSource));
