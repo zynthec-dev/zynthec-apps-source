@@ -7,7 +7,8 @@ class SiteTests(unittest.TestCase):
     def test_landing_and_admin_remain_separate(self):
         out=ROOT/'dist'; html=(out/'index.html').read_text()
         self.assertIn('zynthecApp',html)
-        self.assertIn('id="collection"',html)
+        self.assertEqual(html.count('id="collection"'),1)
+        self.assertEqual(html.count('id="apps"'),1)
         self.assertNotIn('id="login-form"',html)
         self.assertIn('id="login-form"',(out/'admin.html').read_text())
         self.assertTrue((out/'source.json').exists())
