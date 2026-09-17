@@ -22,7 +22,7 @@
 			<key>PayloadVersion</key>
 			<integer>1</integer>
 			<key>URL</key>
-			<string>https://sideload.zynthec.com/install.html</string>
+			<string>https://app.zynthec.com/install.html</string>
 		</dict>
 	</array>
 	<key>PayloadDescription</key>

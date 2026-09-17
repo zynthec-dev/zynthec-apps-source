@@ -21,5 +21,5 @@ class SiteTests(unittest.TestCase):
         clip=profile['PayloadContent'][0]
         self.assertEqual(clip['PayloadType'],'com.apple.webClip.managed')
         self.assertTrue(clip['IsRemovable'])
-        self.assertEqual(clip['URL'],'https://sideload.zynthec.com/install.html')
+        self.assertEqual(clip['URL'],'https://app.zynthec.com/install.html')
         self.assertIn('disabled',(out/'install.html').read_text())

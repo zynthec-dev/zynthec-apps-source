@@ -2,14 +2,14 @@
 
 Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 
-- Landingpage und Bibliothek: https://sideload.zynthec.com
-- Verwaltung: https://sideload.zynthec.com/admin
+- Landingpage und Bibliothek: https://app.zynthec.com
+- Verwaltung: https://app.zynthec.com/admin
 - Source: https://sideload.zynthec.com/source.json
 - IPAs: https://github.com/zynthec-dev/zynthec-ios-sideload-source/releases/tag/apps
 
 ## Online-Verwaltung
 
-Öffne **https://sideload.zynthec.com/admin**.
+Öffne **https://app.zynthec.com/admin**.
 Die öffentliche Landingpage zeigt zynthecApp sowie die Bibliothek ohne direkte IPA-Downloadbuttons.
 Der öffentliche Source-Feed enthält weiterhin die für Sideloading-Tools benötigten Download-URLs.
 `/install.html` erklärt den vorbereiteten Installationsweg; das Web-Clip-Profil installiert noch keine App. Die Anmeldung verwendet einen
@@ -77,10 +77,10 @@ ab. GitHub kann Zeitpläne verzögert ausführen und bei inaktiven öffentlichen
 
 ## Hosting und Entwicklung
 
-Cloudflare Pages: Projekt `zynthec-ios-sideload-source`, Branch `main`, Build-Befehl
+Cloudflare Pages: Projekt `zynthec-ios-app-source`, Branch `main`, Build-Befehl
 `python3 scripts/source.py render && python3 scripts/build_site.py`, Ausgabeordner `dist`, Custom Domain
-`sideload.zynthec.com`. DNS: proxied CNAME auf `zynthec-ios-sideload-source.pages.dev`.
-GitHub Pages wird zusätzlich über den Workflow veröffentlicht.
+`app.zynthec.com` für Website und Verwaltung; `sideload.zynthec.com` bleibt für den Source-Feed und Icons erhalten. Beide DNS-Einträge sind proxied CNAMEs auf `zynthec-ios-app-source.pages.dev`.
+GitHub Actions aktualisiert den Source-Feed; Cloudflare veröffentlicht die Website.
 
 Lokal: `python3 scripts/build_site.py && python3 -m http.server 8080 --directory dist`.
 Keine Python-Pakete oder npm-Abhängigkeiten erforderlich. Die Admin-API unter `functions/api/` läuft nur auf Cloudflare Pages. Tests: `python3 -m unittest discover -s tests -v` und `node --test tests/admin-api.test.mjs`. `source.json` ist generiert;

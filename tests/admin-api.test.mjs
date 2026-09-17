@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const code=await readFile(new URL('../functions/api/[[route]].js',import.meta.url),'utf8');
 const {onRequest,validateSettings}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
-function request(route,{origin='https://sideload.zynthec.com',token='Bearer test_token',body={}}={}){return {params:{route:[route]},request:new Request('https://sideload.zynthec.com/api/'+route,{method:'POST',headers:{Origin:origin,Authorization:token,'Content-Type':'application/json'},body:JSON.stringify(body)})};}
+function request(route,{origin='https://app.zynthec.com',token='Bearer test_token',body={}}={}){return {params:{route:[route]},request:new Request('https://app.zynthec.com/api/'+route,{method:'POST',headers:{Origin:origin,Authorization:token,'Content-Type':'application/json'},body:JSON.stringify(body)})};}
 test('reject unauthenticated and cross-site writes before GitHub',async()=>{
  const saved=globalThis.fetch;globalThis.fetch=()=>{throw new Error('Must not contact GitHub');};
  try{assert.equal((await onRequest(request('settings',{origin:'https://evil.example'}))).status,403);assert.equal((await onRequest(request('settings',{token:''}))).status,401);}finally{globalThis.fetch=saved;}

@@ -11,7 +11,7 @@ function node(tag, cls, text){const n=document.createElement(tag);if(cls)n.class
 function status(id,text,error=false){$(id).textContent=text;$(id).classList.toggle('error',error);}
 async function api(route,body={}){
   const response=await fetch(API+route,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
-  let data;try{data=await response.json();}catch{throw new Error('Das Admin-Panel ist nur auf sideload.zynthec.com verfügbar.');}
+  let data;try{data=await response.json();}catch{throw new Error('Die Verwaltungs-API ist derzeit nicht erreichbar. Bitte lade die Seite neu oder versuche es später erneut.');}
   if(!response.ok){if(response.status===401)logout();throw new Error(data.error||'Anfrage fehlgeschlagen.');}return data;
 }
 function logout(){token='';catalog={};settings={};sha='';$('token').value='';$('dashboard').hidden=true;$('login-view').hidden=false;$('logout').hidden=true;document.querySelectorAll('dialog').forEach(d=>d.close());}
@@ -71,4 +71,4 @@ $('upload-form').addEventListener('submit',async event=>{
   }catch(e){status('upload-status',e.message,true);$('retry-import').hidden=!pendingImport;}finally{busy=false;event.submitter.disabled=false;$('logout').disabled=false;$('ipa-file').disabled=false;}
 });
 window.addEventListener('beforeunload',event=>{if(busy){event.preventDefault();event.returnValue='';}});
-if(location.hostname!=='sideload.zynthec.com'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){status('login-status','Bitte öffne die Verwaltung unter https://sideload.zynthec.com/admin.',true);$('login-form').querySelector('button').disabled=true;}
+if(location.hostname!=='app.zynthec.com'&&location.hostname!=='sideload.zynthec.com'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){status('login-status','Bitte öffne die Verwaltung unter https://app.zynthec.com/admin.',true);$('login-form').querySelector('button').disabled=true;}
