@@ -4,7 +4,7 @@ Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 
 - Landingpage und Bibliothek: https://app.zynthec.com
 - Verwaltung: https://app.zynthec.com/admin
-- Source: https://sideload.zynthec.com/source.json
+- Source: https://app.zynthec.com/source.json
 - IPAs: https://github.com/zynthec-dev/zynthec-ios-sideload-source/releases/tag/apps
 
 ## Online-Verwaltung
@@ -79,7 +79,7 @@ ab. GitHub kann Zeitpläne verzögert ausführen und bei inaktiven öffentlichen
 
 Cloudflare Pages: Projekt `zynthec-ios-app-source`, Branch `main`, Build-Befehl
 `python3 scripts/source.py render && python3 scripts/build_site.py`, Ausgabeordner `dist`, Custom Domain
-`app.zynthec.com` für Website und Verwaltung; `sideload.zynthec.com` bleibt für den Source-Feed und Icons erhalten. Beide DNS-Einträge sind proxied CNAMEs auf `zynthec-ios-app-source.pages.dev`.
+`app.zynthec.com` für Website, Verwaltung, Source-Feed und Icons; `sideload.zynthec.com` bleibt als kompatibler Alias erhalten. Beide DNS-Einträge sind proxied CNAMEs auf `zynthec-ios-app-source.pages.dev`.
 GitHub Actions aktualisiert den Source-Feed; Cloudflare veröffentlicht die Website.
 
 Lokal: `python3 scripts/build_site.py && python3 -m http.server 8080 --directory dist`.
@@ -88,3 +88,5 @@ App-Texte in `apps.json` bearbeiten. `catalog/` enthält den Versionsverlauf und
 zuletzt synchronisierten SideInstaller-Release. `icon.png` ist das Source-Icon.
 
 Format: https://faq.altstore.io/developers/make-a-source
+
+Die Website hat drei Bereiche in der unteren Tableiste: Start (Source hinzufügen), zynthecApp und Bibliothek. Die bisherigen Apps sind über `enabled: false` ausgeblendet und können im Admin-Panel wiederhergestellt werden. Die Verwaltung als Tool in der nativen App ist geplant.

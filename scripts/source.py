@@ -3,7 +3,7 @@
 import argparse, datetime, hashlib, json, pathlib, plistlib, re, shutil, struct, subprocess, tempfile, urllib.parse, zipfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 REPO = 'zynthec-dev/zynthec-ios-sideload-source'
-BASE = 'https://sideload.zynthec.com'
+BASE = 'https://app.zynthec.com'
 
 def hash_file(path):
     digest = hashlib.sha256()

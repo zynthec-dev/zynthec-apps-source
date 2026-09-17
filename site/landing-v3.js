@@ -1,4 +1,4 @@
-const sourceURL = 'https://sideload.zynthec.com/source.json';
+const sourceURL = 'https://app.zynthec.com/source.json';
 const container = document.querySelector('#apps');
 const sourceDialog = document.querySelector('#source-dialog');
 const appDialog = document.querySelector('#app-dialog');
@@ -12,7 +12,7 @@ function element(tag, className, text) {
 }
 function iconFor(app, className = 'app-icon') {
   const icon = element('img', className);
-  try { const url = new URL(app.iconURL, location.href); icon.src = url.origin === 'https://sideload.zynthec.com' ? url.pathname : url.origin === location.origin ? url.href : '/icon.png'; } catch { icon.src = '/icon.png'; }
+  try { const url = new URL(app.iconURL, location.href); icon.src = url.origin === 'https://app.zynthec.com' ? url.pathname : url.origin === location.origin ? url.href : '/icon.png'; } catch { icon.src = '/icon.png'; }
   icon.alt = ''; icon.loading = 'lazy';
   return icon;
 }
@@ -57,7 +57,11 @@ function render() {
     card.append(top,element('h3','',app.name),element('p','app-description',description(app)),bottom);
     container.append(card);
   }
-  if (!visible.length) {
+  if (!apps.length) {
+    const empty = element('div','empty-state library-empty');
+    empty.append(element('span','empty-symbol','＋'), element('h3','','Noch keine Apps.'), element('p','','Die Bibliothek ist aktuell leer. Neue Apps erscheinen hier, sobald sie veröffentlicht werden.'));
+    container.append(empty);
+  } else if (!visible.length) {
     const empty = element('div','empty-state','Keine passende App gefunden.');
     const reset = element('button','text-link','Filter zurücksetzen');
     reset.addEventListener('click',()=>{document.querySelector('#search').value='';setFilter('all');}); empty.append(reset);container.append(empty);
@@ -76,9 +80,19 @@ document.querySelector('#copy').addEventListener('click', async () => {
 fetch('./source.json').then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); })
   .then(source => {
     apps = Array.isArray(source.apps) ? source.apps : []; document.querySelector('#count').textContent = `${apps.length} Apps in deiner Source`; render();
-    for (const app of [...apps].sort((a,b)=>(a.name==='miPet'?-1:b.name==='miPet'?1:0)).slice(0,3)) {
-      const row=element('div','mini-app');row.append(iconFor(app,''),element('b','',app.name),element('span','',`v${app.versions[0].version}`));document.querySelector('#mini-apps').append(row);
-    }
+
   })
   .catch(() => { container.replaceChildren(element('p', 'empty-state', 'Der Katalog konnte nicht geladen werden. Bitte lade die Seite erneut.')); })
   .finally(()=>container.setAttribute('aria-busy','false'));
+
+const pageForHash = {start:'start',source:'start',app:'app',features:'app',screenshots:'app',install:'app',library:'library',collection:'library'};
+function navigate() {
+  const hash = location.hash.slice(1);
+  const page = pageForHash[hash] || 'start';
+  document.querySelectorAll('[data-page]').forEach(panel => { panel.hidden = panel.dataset.page !== page; });
+  document.querySelectorAll('[data-tab]').forEach(link => { if (link.dataset.tab === page) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current'); });
+  if (['features','screenshots','install'].includes(hash)) document.getElementById(hash).scrollIntoView();
+  else window.scrollTo({top:0,behavior:'instant'});
+}
+window.addEventListener('hashchange',navigate);
+navigate();

@@ -6,7 +6,7 @@
       "bundleIdentifier": "thewonderofyou.Feather",
       "developerName": "Entwickler der jeweiligen App",
       "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/36b8433512c580b0.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/36b8433512c580b0.png",
       "tintColor": "#165C40",
       "versions": [
         {
@@ -31,7 +31,7 @@
       "bundleIdentifier": "nya.asami.ksign",
       "developerName": "Entwickler der jeweiligen App",
       "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/1d3420a8af3ac2b0.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/1d3420a8af3ac2b0.png",
       "tintColor": "#165C40",
       "versions": [
         {
@@ -56,7 +56,7 @@
       "bundleIdentifier": "com.DebianArch.ScarletPersonalXYZZZ",
       "developerName": "Entwickler der jeweiligen App",
       "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/9bf2e8aa904f227f.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/9bf2e8aa904f227f.png",
       "tintColor": "#165C40",
       "versions": [
         {
@@ -87,7 +87,7 @@
       "bundleIdentifier": "com.google.ios.youtubemusic",
       "developerName": "Entwickler der jeweiligen App",
       "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/9459af3cd8d41f45.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/9459af3cd8d41f45.png",
       "tintColor": "#165C40",
       "versions": [
         {
@@ -133,7 +133,7 @@
       "bundleIdentifier": "p3.xyz.yyyue.esign",
       "developerName": "Entwickler der jeweiligen App",
       "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/3ecac148b6bdf462.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/3ecac148b6bdf462.png",
       "tintColor": "#165C40",
       "versions": [
         {
@@ -169,7 +169,7 @@
       "bundleIdentifier": "de.renewitt.mipet",
       "developerName": "Entwickler der jeweiligen App",
       "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/4368328c2c3f587a.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/4368328c2c3f587a.png",
       "tintColor": "#165C40",
       "versions": [
         {
@@ -199,7 +199,7 @@
       "bundleIdentifier": "com.frizzlem.sideinstaller",
       "developerName": "FrizzleM",
       "localizedDescription": "SideInstaller von FrizzleM. Neue stabile GitHub-Releases werden automatisch in dieser Source angeboten.",
-      "iconURL": "https://sideload.zynthec.com/assets/icons/45343518de3870e4.png",
+      "iconURL": "https://app.zynthec.com/assets/icons/45343518de3870e4.png",
       "tintColor": "#165C40",
       "versions": [
         {
