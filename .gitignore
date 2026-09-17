@@ -1,0 +1,8 @@
+.DS_Store
+ipa/*.ipa
+dist/
+__pycache__/
+.wrangler/
+node_modules/
+.env*
+.dev.vars*

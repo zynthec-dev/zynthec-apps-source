@@ -1,0 +1,57 @@
+name: Update source and publish GitHub Pages
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: source-publish
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test generator
+        run: python3 -m unittest discover -s tests -v
+      - name: Import committed IPAs if present
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/source.py import --publish
+      - name: Check official SideInstaller releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/source.py sync
+      - name: Generate source
+        run: python3 scripts/source.py render
+      - name: Commit source updates
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add source.json catalog assets
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update app source'
+            git push
+          fi
+      - name: Build website
+        run: python3 scripts/build_site.py --base-path /zynthec-ios-app-source
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  pages:
+    needs: source
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
