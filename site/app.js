@@ -15,7 +15,7 @@ function render() {
     const version = app.versions[0];
     const card = element('article', 'app');
     const top = element('div', 'app-top');
-    const icon = element('img', 'app-icon'); icon.src = app.iconURL; icon.alt = ''; icon.loading = 'lazy';
+    const icon = element('img', 'app-icon'); icon.src = app.iconURL.replace('https://sideload.zynthec.com/', './'); icon.alt = ''; icon.loading = 'lazy';
     const title = element('div'); title.append(element('h3', '', app.name), element('p', 'developer', app.developerName));
     top.append(icon, title);
     const meta = element('div', 'meta');

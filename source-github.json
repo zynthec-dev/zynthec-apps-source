@@ -1,0 +1,247 @@
+{
+  "name": "zynthec Apps",
+  "identifier": "com.zynthec.apps",
+  "sourceURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/source-github.json",
+  "subtitle": "Deine Apps. Deine Wahl.",
+  "description": "Die zynthec App-Sammlung für SideStore und AltStore Classic. Mit automatischen SideInstaller-Updates.",
+  "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/icon.png",
+  "website": "https://zynthec-dev.github.io/zynthec-ios-app-source",
+  "tintColor": "#165C40",
+  "apps": [
+    {
+      "name": "ESign",
+      "bundleIdentifier": "p3.xyz.yyyue.esign",
+      "developerName": "Entwickler der jeweiligen App",
+      "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/3ecac148b6bdf462.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "5.0.2",
+          "buildVersion": "1",
+          "date": "2026-09-17T00:13:06+00:00",
+          "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/f00116a398972c83.ipa",
+          "size": 7522792,
+          "minOSVersion": "11.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [
+          "application-identifier",
+          "com.apple.developer.team-identifier",
+          "get-task-allow"
+        ],
+        "privacy": {
+          "NSAppleMusicUsageDescription": "点允许，才能使用。",
+          "NSCameraUsageDescription": "授权后才能使用您的相机进行扫一扫",
+          "NSLocationWhenInUseUsageDescription": "开启定位服务，我们将根据您的位置,为您提供相关信息。在未经许可前不会开启定位服务，请放心使用。",
+          "NSPhotoLibraryAddUsageDescription": "授权后才能将图片保存到本地相册",
+          "NSPhotoLibraryUsageDescription": "授权后才能访问您的手机相册，您才能上传对应的图片",
+          "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you"
+        }
+      },
+      "version": "5.0.2",
+      "versionDate": "2026-09-17T00:13:06+00:00",
+      "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/f00116a398972c83.ipa",
+      "size": 7522792
+    },
+    {
+      "name": "Feather",
+      "bundleIdentifier": "thewonderofyou.Feather",
+      "developerName": "Entwickler der jeweiligen App",
+      "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/36b8433512c580b0.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "2.9.0",
+          "buildVersion": "1",
+          "date": "2026-09-17T00:13:05+00:00",
+          "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/833c57d3c4bf4b4a.ipa",
+          "size": 14241853,
+          "minOSVersion": "16.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      },
+      "version": "2.9.0",
+      "versionDate": "2026-09-17T00:13:05+00:00",
+      "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/833c57d3c4bf4b4a.ipa",
+      "size": 14241853
+    },
+    {
+      "name": "Ksign",
+      "bundleIdentifier": "nya.asami.ksign",
+      "developerName": "Entwickler der jeweiligen App",
+      "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/1d3420a8af3ac2b0.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "1.6.1",
+          "buildVersion": "1",
+          "date": "2026-09-17T00:13:05+00:00",
+          "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/1932bfd9615d0511.ipa",
+          "size": 16231234,
+          "minOSVersion": "16.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      },
+      "version": "1.6.1",
+      "versionDate": "2026-09-17T00:13:05+00:00",
+      "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/1932bfd9615d0511.ipa",
+      "size": 16231234
+    },
+    {
+      "name": "miPet",
+      "bundleIdentifier": "de.renewitt.mipet",
+      "developerName": "zynthec",
+      "localizedDescription": "miPet – dein kleiner Begleiter auf dem iPhone.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/4368328c2c3f587a.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "buildVersion": "1",
+          "date": "2026-09-17T00:13:06+00:00",
+          "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/274bded7e43dda2a.ipa",
+          "size": 14870325,
+          "minOSVersion": "17.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSCameraUsageDescription": "miPet benötigt die Kamera, damit du neue Fotos aufnehmen kannst.",
+          "NSMicrophoneUsageDescription": "miPet benötigt das Mikrofon, damit du in Echtzeit mit deinem Pet sprechen kannst.",
+          "NSPhotoLibraryAddUsageDescription": "miPet speichert deine ausgewählten Werke auf Wunsch in der Fotomediathek.",
+          "NSPhotoLibraryUsageDescription": "miPet benötigt Zugriff auf ausgewählte Fotos, um sie zu erklären oder zu bearbeiten."
+        }
+      },
+      "version": "0.1.0",
+      "versionDate": "2026-09-17T00:13:06+00:00",
+      "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/274bded7e43dda2a.ipa",
+      "size": 14870325
+    },
+    {
+      "name": "Scarlet",
+      "bundleIdentifier": "com.DebianArch.ScarletPersonalXYZZZ",
+      "developerName": "Entwickler der jeweiligen App",
+      "localizedDescription": "Bereitgestellt in der zynthec Apps Source.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/9bf2e8aa904f227f.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "1.0",
+          "buildVersion": "1",
+          "date": "2026-09-17T00:13:05+00:00",
+          "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/c3cf067c6fa56850.ipa",
+          "size": 15541298,
+          "minOSVersion": "13.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [
+          "application-identifier",
+          "com.apple.developer.team-identifier",
+          "get-task-allow"
+        ],
+        "privacy": {
+          "NSLocalNetworkUsageDescription": "This app needs to access the local network to do wireless installs."
+        }
+      },
+      "version": "1.0",
+      "versionDate": "2026-09-17T00:13:05+00:00",
+      "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/c3cf067c6fa56850.ipa",
+      "size": 15541298
+    },
+    {
+      "name": "SideInstaller",
+      "bundleIdentifier": "com.frizzlem.sideinstaller",
+      "developerName": "FrizzleM",
+      "localizedDescription": "SideInstaller von FrizzleM. Neue stabile GitHub-Releases werden automatisch in dieser Source angeboten.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/45343518de3870e4.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "9",
+          "date": "2026-09-14T17:59:20Z",
+          "downloadURL": "https://github.com/FrizzleM/SideInstaller/releases/download/v1.0.0/SideInstaller.ipa",
+          "size": 9243749,
+          "minOSVersion": "18.0",
+          "localizedDescription": "This is the biggest update SideInstaller has had so far. Enjoy v1, alongside iOS 27’s official release <3\r\n\r\n# Main changes:\r\n- Added a Tools page\r\n    - Added “Side by Side”, which lets one iPhone/iPad wirelessly install SideInstaller on another iPhone/iPad\r\n    - Certificates and Pairing are now in the Tools tab\r\n    - Added a location spoofer that lets your iPhone believe you are in any location\r\n    - Added an entitlement manager (mainly to let users add increased memory limit)\r\n- Added partial iOS 26-17 support\r\n    - Users on iOS 26-17 can now use SideInstaller, but only if they already have their pairing file, which they will need a pc to get\r\n    - iOS 26-17 devices cannot use the Pairing tool\r\n- Huge changes to the Apple ID logging in\r\n    - 2FA now supports SMS and calls\r\n    - Fixed the HTTP 503 error on log in\r\n    - Session IDs are now saved and reused to avoid Apple giving rate limits\r\n- Added support for URLs in the import .ipa\r\n- Added a new dark and glass app icon\r\n- Added Portuguese and Japanese (credits to @so-5699) languages\r\n\r\n## Fixes: \r\n\r\n- Fixed the LV + SS nightly bug that would make it ask for the certificate’s password\r\n- Added a LocalDevVPN start at launch\r\n- Fixed compatibility error with LocalDevVPN’s update\r\n- Improved the looks of the progress bar\r\n- Fixed the import .ipa bug that didn’t let users select any file\r\n- Reduced the amount of times the app will require to be approved in Privacy and Security\r\n- Changing the anisette server in the settings now persists\r\n\r\n"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [
+          "application-identifier",
+          "com.apple.developer.team-identifier",
+          "get-task-allow"
+        ],
+        "privacy": {
+          "NSLocalNetworkUsageDescription": "SideInstaller advertises an on-device pairing service so this iPhone can pair with it, and connects to the local lockdown daemon to install apps.",
+          "NSLocationAlwaysAndWhenInUseUsageDescription": "SideInstaller can use location to keep running while you approve pairing in Settings.",
+          "NSLocationWhenInUseUsageDescription": "SideInstaller can use location to keep running while you approve pairing in Settings."
+        }
+      },
+      "version": "1.0.0",
+      "versionDate": "2026-09-14T17:59:20Z",
+      "downloadURL": "https://github.com/FrizzleM/SideInstaller/releases/download/v1.0.0/SideInstaller.ipa",
+      "size": 9243749
+    },
+    {
+      "name": "YTMusicUltimate",
+      "bundleIdentifier": "com.google.ios.youtubemusic",
+      "developerName": "Entwickler der jeweiligen App",
+      "localizedDescription": "YouTube Music 9.37.2 mit YTMusicUltimate 2.4.1.",
+      "iconURL": "https://zynthec-dev.github.io/zynthec-ios-app-source/assets/icons/9459af3cd8d41f45.png",
+      "tintColor": "#165C40",
+      "versions": [
+        {
+          "version": "9.37.2",
+          "buildVersion": "9.37.2",
+          "date": "2026-09-17T00:13:05+00:00",
+          "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/1bb666a511d7469b.ipa",
+          "size": 106410794,
+          "minOSVersion": "16.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [
+          "application-identifier",
+          "aps-environment",
+          "com.apple.developer.associated-domains",
+          "com.apple.developer.carplay-audio",
+          "com.apple.developer.coremedia.allow-alternate-video-decoder-selection",
+          "com.apple.developer.mediasetup",
+          "com.apple.developer.networking.multicast",
+          "com.apple.developer.networking.wifi-info",
+          "com.apple.developer.siri",
+          "com.apple.security.application-groups",
+          "keychain-access-groups"
+        ],
+        "privacy": {
+          "NSBluetoothAlwaysUsageDescription": "YouTube Music uses Bluetooth to locate and connect to Chromecast and other devices.",
+          "NSBluetoothPeripheralUsageDescription": "YouTube Music uses Bluetooth to locate and connect to Chromecast and other devices.",
+          "NSCameraUsageDescription": "To take a profile picture, allow YouTube Music to access your camera.",
+          "NSContactsUsageDescription": "This will allow you to invite your family into your membership plan.",
+          "NSLocalNetworkUsageDescription": "Access to your network allows YouTube Music to discover and connect to devices such as your TV.",
+          "NSMicrophoneUsageDescription": "This lets you include audio with your videos.",
+          "NSPhotoLibraryAddUsageDescription": "To save images, allow YouTube Music to access your photo library.",
+          "NSPhotoLibraryUsageDescription": "To choose a profile picture, allow YouTube Music to access your photos."
+        }
+      },
+      "version": "9.37.2",
+      "versionDate": "2026-09-17T00:13:05+00:00",
+      "downloadURL": "https://github.com/zynthec-dev/zynthec-ios-app-source/releases/download/apps/1bb666a511d7469b.ipa",
+      "size": 106410794
+    }
+  ],
+  "news": []
+}

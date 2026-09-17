@@ -4,7 +4,7 @@ Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 
 - Website: https://sideload.zynthec.com
 - Source: https://sideload.zynthec.com/source.json
-- GitHub-Source: https://raw.githubusercontent.com/zynthec-dev/zynthec-ios-app-source/main/source.json
+- GitHub-Source: https://zynthec-dev.github.io/zynthec-ios-app-source/source-github.json
 - GitHub Pages: https://zynthec-dev.github.io/zynthec-ios-app-source/
 - IPAs: https://github.com/zynthec-dev/zynthec-ios-app-source/releases/tag/apps
 
@@ -19,7 +19,7 @@ Auf macOS mit Python 3 und GitHub CLI (`brew install gh`, danach `gh auth login`
 3. Optional Namen, Beschreibung, Entwickler und Kategorie in `apps.json` unter der
    Bundle-ID anpassen. Anschließend `python3 scripts/source.py render` ausführen.
 4. `python3 -m unittest discover -s tests -v`
-5. `git add source.json catalog assets apps.json && git commit -m "Update apps" && git push`
+5. `git add source.json source-github.json catalog assets apps.json && git commit -m "Update apps" && git push`
 
 Cloudflare Pages veröffentlicht Änderungen an `main` automatisch. Große IPAs werden
 absichtlich nicht in Git gespeichert. GitHub Releases unterstützt diese Downloads.

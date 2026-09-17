@@ -1,7 +1,7 @@
 IPAs hier ablegen, dann auf macOS ausführen:
 
     python3 scripts/source.py import --publish
-    git add source.json catalog assets apps.json
+    git add source.json source-github.json catalog assets apps.json
     git commit -m "Update app catalog"
     git push
 
