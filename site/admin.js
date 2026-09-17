@@ -1,3 +1,7 @@
+const localPreview = ['127.0.0.1','localhost'].includes(location.hostname);
+if (location.protocol !== 'https:' && !localPreview) {
+  location.replace('https://' + location.host + location.pathname + location.search);
+}
 let token = '';
 let catalog = {};
 let settings = {};
@@ -10,8 +14,16 @@ const API = '/api/';
 function node(tag, cls, text){const n=document.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;}
 function status(id,text,error=false){$(id).textContent=text;$(id).classList.toggle('error',error);}
 async function api(route,body={}){
-  const response=await fetch(API+route,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
-  let data;try{data=await response.json();}catch{throw new Error('Die Verwaltungs-API ist derzeit nicht erreichbar. Bitte lade die Seite neu oder versuche es später erneut.');}
+  if(location.protocol!=='https:'&&!localPreview)throw new Error('Bitte öffne https://app.zynthec.com/admin für die sichere Anmeldung.');
+  const response=await fetch(API+route,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store',redirect:'error'});
+  let data;
+  try { data=await response.json(); }
+  catch {
+    const requestID=response.headers.get('cf-ray');
+    const detail=`${route} · HTTP ${response.status}${requestID ? ' · Anfrage '+requestID : ''}`;
+    if(response.headers.get('cf-mitigated')==='challenge')throw new Error(`Cloudflare verlangt eine Browserprüfung. Öffne die Verwaltung direkt in Safari und lade sie erneut. (${detail})`);
+    throw new Error(`Der Server liefert keine gültige API-Antwort. Bitte teile diese Fehlerkennung mit: ${detail}`);
+  }
   if(!response.ok){if(response.status===401)logout();throw new Error(data.error||'Anfrage fehlgeschlagen.');}return data;
 }
 function logout(){token='';catalog={};settings={};sha='';$('token').value='';$('dashboard').hidden=true;$('login-view').hidden=false;$('logout').hidden=true;document.querySelectorAll('dialog').forEach(d=>d.close());}
@@ -53,6 +65,7 @@ document.querySelectorAll('dialog').forEach(dialog=>{dialog.querySelector('[data
 $('open-upload').addEventListener('click',()=>{$('upload-dialog').showModal();});
 $('ipa-file').addEventListener('change',()=>{const file=$('ipa-file').files[0];$('file-label').textContent=file?`${file.name} · ${(file.size/1048576).toFixed(1)} MB`:'Bis zu 512 MB';});
 function uploadPart(blob,upload,part,onProgress){return new Promise((resolve,reject)=>{
+  if(location.protocol!=='https:'&&!localPreview){reject(new Error('Upload nur über HTTPS möglich.'));return;}
   const xhr=new XMLHttpRequest();xhr.open('POST',`${API}chunk?upload=${upload}&part=${part}`);xhr.setRequestHeader('Authorization',`Bearer ${token}`);xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.timeout=180000;xhr.upload.onprogress=event=>onProgress(event.loaded);xhr.onerror=()=>reject(new Error('Upload unterbrochen. Prüfe deine Verbindung und starte erneut.'));xhr.ontimeout=()=>reject(new Error('Zeitüberschreitung beim Upload. Bitte erneut versuchen.'));xhr.onload=()=>{let data;try{data=JSON.parse(xhr.responseText);}catch{reject(new Error('Upload fehlgeschlagen. Bitte erneut versuchen.'));return;}xhr.status>=200&&xhr.status<300?resolve(data):reject(new Error(data.error||'Upload fehlgeschlagen.'));};xhr.send(blob);
 });}
 async function dispatchUpload(){await api('import',pendingImport);pendingImport=null;$('retry-import').hidden=true;status('upload-status','Upload abgeschlossen. GitHub prüft die IPA und veröffentlicht sie. Du kannst dieses Fenster jetzt schließen.');status('dashboard-status','App-Import gestartet. Prüfe den Verlauf unter Veröffentlichungen.');await loadRuns();}
