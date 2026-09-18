@@ -94,13 +94,13 @@ fetch('./source.json').then(response => { if (!response.ok) throw new Error('Cat
   .catch(() => { container.append(element('p', 'empty-state', 'Weitere Apps konnten nicht geladen werden. Bitte lade die Seite erneut.')); })
   .finally(()=>container.setAttribute('aria-busy','false'));
 
-const pageForHash = {start:'start',source:'start',app:'app',features:'app',screenshots:'app',install:'app',library:'library',collection:'library'};
+const pageForHash = {start:'app',source:'library',app:'app',features:'app',screenshots:'app',install:'app',library:'library',collection:'library'};
 function navigate() {
   const hash = location.hash.slice(1);
-  const page = pageForHash[hash] || 'start';
+  const page = pageForHash[hash] || 'app';
   document.querySelectorAll('[data-page]').forEach(panel => { panel.hidden = panel.dataset.page !== page; });
   document.querySelectorAll('[data-tab]').forEach(link => { if (link.dataset.tab === page) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current'); });
-  if (['features','screenshots','install'].includes(hash)) document.getElementById(hash).scrollIntoView();
+  if (['features','screenshots','install','source'].includes(hash)) document.getElementById(hash).scrollIntoView();
   else window.scrollTo({top:0,behavior:'instant'});
 }
 window.addEventListener('hashchange',navigate);
