@@ -54,7 +54,7 @@ export async function onRequest({request,params,env}) {
       await audit(env.ADMIN_DB,user,'integration.save');return json({ok:true});
     }
     const secret=await env.ADMIN_DB.prepare("SELECT value FROM admin_settings WHERE key='github'").first();
-    if(!secret)throw new APIError('Die Source-Verbindung fehlt. Der Hauptadmin kann sie unter Einstellungen einrichten.',424);
+    if(!secret)throw new APIError('Die Source-Verbindung fehlt. Der Hauptadmin muss sich einmal über GitHub anmelden.',424);
     const token='Bearer '+await decrypt(env.AUTH_KEY,secret.value);
     const headers={Authorization:token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'zynthec-source-admin'};
     async function github(path,{method='GET',body,raw=false}={}){
