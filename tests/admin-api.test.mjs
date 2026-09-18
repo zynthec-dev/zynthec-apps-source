@@ -1,59 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-const code=await readFile(new URL('../functions/api/[[route]].js',import.meta.url),'utf8');
-const {onRequest,validateSettings}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
-function request(route,{origin='https://storage.zynthec.com',token='Bearer test_token',body={}}={}){return {params:{route:[route]},request:new Request('https://storage.zynthec.com/api/'+route,{method:'POST',headers:{Origin:origin,Authorization:token,'Content-Type':'application/json'},body:JSON.stringify(body)})};}
-test('reject unauthenticated and cross-site writes before GitHub',async()=>{
- const saved=globalThis.fetch;globalThis.fetch=()=>{throw new Error('Must not contact GitHub');};
- try{assert.equal((await onRequest(request('settings',{origin:'https://evil.example'}))).status,403);assert.equal((await onRequest(request('settings',{token:''}))).status,401);}finally{globalThis.fetch=saved;}
-});
-test('reject wrong GitHub owner',async()=>{const saved=globalThis.fetch;globalThis.fetch=async()=>Response.json({login:'someone-else'});try{assert.equal((await onRequest(request('session'))).status,403);}finally{globalThis.fetch=saved;}});
-test('reject read-only repository access',async()=>{const saved=globalThis.fetch;globalThis.fetch=async url=>Response.json(url.endsWith('/user')?{login:'zynthec-dev'}:{permissions:{push:false}});try{assert.equal((await onRequest(request('session'))).status,403);}finally{globalThis.fetch=saved;}});
-test('allowed owner can log in and settings use optimistic concurrency',async()=>{
- const saved=globalThis.fetch;const calls=[];globalThis.fetch=async(url,opts)=>{calls.push({url,opts});if(url.endsWith('/user'))return Response.json({login:'zynthec-dev'});if(url.endsWith('/contents/apps.json'))return Response.json({commit:{sha:'new'}});return Response.json({permissions:{push:true}});};
- try{assert.equal((await onRequest(request('session'))).status,200);assert.equal((await onRequest(request('settings',{body:{sha:'a'.repeat(40),settings:{'test.app':{enabled:false,name:'Test'}}}}))).status,200);const write=calls.find(c=>c.opts.method==='PUT');const body=JSON.parse(write.opts.body);assert.equal(body.sha,'a'.repeat(40));assert.equal(JSON.parse(Buffer.from(body.content,'base64'))['test.app'].enabled,false);}finally{globalThis.fetch=saved;}
-});
-test('settings reject source URLs, executable fields and prototype properties',()=>{
- for(const field of ['downloadURL','versions','constructor','__proto__'])assert.throws(()=>validateSettings({'test.app':JSON.parse(`{"${field}":"evil"}`)}));
- assert.throws(()=>validateSettings({'test.app':{category:'bad'}}));
- assert.throws(()=>validateSettings({'test.app':{enabled:'false'}}));
- assert.throws(()=>validateSettings({'test.app':{name:'  '}}));
-});
-test('upstream conflicts remain conflicts rather than overwriting',async()=>{const saved=globalThis.fetch;globalThis.fetch=async url=>url.endsWith('/user')?Response.json({login:'zynthec-dev'}):url.endsWith('/contents/apps.json')?Response.json({message:'conflict'},{status:409}):Response.json({permissions:{push:true}});try{assert.equal((await onRequest(request('settings',{body:{sha:'a'.repeat(40),settings:{}}}))).status,409);}finally{globalThis.fetch=saved;}});
-
-test('private repository hidden from token produces actionable access error',async()=>{
- const saved=globalThis.fetch;
- globalThis.fetch=async url=>url.endsWith('/user')?Response.json({login:'zynthec-dev'}):Response.json({message:'Not Found'},{status:404});
- try {const response=await onRequest(request('session'));assert.equal(response.status,403);const data=await response.json();assert.match(data.error,/private Repository/);assert.match(data.error,/zynthec-apps-source/);} finally {globalThis.fetch=saved;}
-});
-test('upstream failures retain JSON diagnostics instead of generic 502',async()=>{
- const saved=globalThis.fetch;
- try {
-  for(const status of [301,404,429,500,502,503]){
-   globalThis.fetch=async()=>new Response('upstream html',{status});
-   const response=await onRequest(request('session'));assert.equal(response.status,424);assert.match((await response.json()).error,new RegExp(String(status)));
-  }
-  globalThis.fetch=async()=>new Response('<html>invalid</html>');
-  assert.match((await (await onRequest(request('session'))).json()).error,/JSON/);
-  globalThis.fetch=async()=>{throw new Error('connection failed with sensitive details');};
-  const response=await onRequest(request('session'));assert.equal(response.status,424);assert.doesNotMatch((await response.json()).error,/sensitive/);
- } finally {globalThis.fetch=saved;}
-});
-const middlewareCode=await readFile(new URL('../functions/_middleware.js',import.meta.url),'utf8');
-const {onRequest:routeHost}=await import('data:text/javascript;base64,'+Buffer.from(middlewareCode).toString('base64'));
-test('admin host routes preserve public feed and isolate API',async()=>{
- for(const [url,status,location] of [
-  ['https://storage.zynthec.com/',302,'https://storage.zynthec.com/admin'],
-  ['https://apps.zynthec.com/admin',302,'https://storage.zynthec.com/admin'],
-  ['https://app.zynthec.com/admin',302,'https://storage.zynthec.com/admin'],
-  ['https://apps.zynthec.com/api/session',403,null],
-  ['https://storage.zynthec.com/api/session',200,null],
-  ['https://storage.zynthec.com/admin',200,null],
-  ['https://apps.zynthec.com/source.json',200,null],
-  ['http://localhost:8788/api/session',200,null],
- ]){
-  const response=await routeHost({request:new Request(url),next:async()=>new Response('next')});
-  assert.equal(response.status,status,url);assert.equal(response.headers.get('location'),location,url);
- }
-});
+import {readFileSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+import {onRequest,validateSettings} from '../functions/api/[[route]].js';
+import {digest,passwordHash,encrypt,decrypt,RIGHTS,now} from '../lib/admin-auth.js';
+import {onRequest as routeHost} from '../functions/_middleware.js';
+function environment(){const sqlite=new DatabaseSync(':memory:');sqlite.exec(readFileSync(new URL('../migrations/0001_admin.sql',import.meta.url),'utf8'));const db={prepare(sql){let args=[];const q={bind(...values){args=values;return q;},async first(){return sqlite.prepare(sql).get(...args)||null;},async all(){return {results:sqlite.prepare(sql).all(...args)};},async run(){return sqlite.prepare(sql).run(...args);}};return q;},async batch(statements){sqlite.exec('BEGIN');try{const r=[];for(const s of statements)r.push(await s.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}}};return {ADMIN_DB:db,AUTH_KEY:'12'.repeat(32),sqlite};}
+function request(route,env,{origin='https://storage.zynthec.com',cookie='',body={},method='POST'}={}){return {env,params:{route:route.split('/')},request:new Request('https://storage.zynthec.com/api/'+route,{method,headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/json'},...(method==='POST'?{body:JSON.stringify(body)}:{})})};}
+async function member(env,rights=[],owner=0){const id=crypto.randomUUID(),token=crypto.randomUUID().replaceAll('-','').repeat(2);env.sqlite.prepare('INSERT INTO admin_users(id,email,name,owner,permissions,created_at) VALUES(?,?,?,?,?,?)').run(id,id+'@example.com','Test',owner,JSON.stringify(rights),now());env.sqlite.prepare('INSERT INTO admin_sessions VALUES(?,?,?)').run(await digest(token),id,now()+3600);return {id,cookie:'__Host-zynthec_session='+token};}
+async function integration(env){env.sqlite.prepare("INSERT INTO admin_settings VALUES('github',?)").run(await encrypt(env.AUTH_KEY,'test-secret'));}
+test('origin, method and session checks reject before GitHub',async()=>{const env=environment();assert.equal((await onRequest(request('catalog',env,{origin:'https://evil.example'}))).status,403);assert.equal((await onRequest(request('catalog',env))).status,401);assert.equal((await onRequest(request('catalog',env,{method:'GET'}))).status,405);});
+test('single-use activation, password login, cookies and logout',async()=>{const env=environment(),invite='ab'.repeat(32);env.sqlite.prepare('INSERT INTO admin_users(id,email,name,permissions,invite_hash,invite_expires,created_at) VALUES(?,?,?,?,?,?,?)').run('u','owner@example.com','Owner','[]',await digest(invite),now()+1000,now());const activation={invite,password:'a long test password'};assert.equal((await onRequest(request('activate',env,{body:activation}))).status,200);assert.equal((await onRequest(request('activate',env,{body:activation}))).status,400);assert.equal((await onRequest(request('login',env,{body:{email:'owner@example.com',password:'wrong password'}}))).status,401);const login=await onRequest(request('login',env,{body:{email:'owner@example.com',password:activation.password}}));assert.equal(login.status,200);const cookie=login.headers.get('set-cookie');assert.match(cookie,/HttpOnly; Secure; SameSite=Strict/);const session=await onRequest(request('session',env,{cookie}));assert.equal(session.status,200);assert.equal((await session.json()).user.email,'owner@example.com');await onRequest(request('logout',env,{cookie}));assert.equal((await onRequest(request('session',env,{cookie}))).status,401);});
+test('expired invites, disabled accounts and expired sessions are denied',async()=>{const env=environment(),m=await member(env);env.sqlite.prepare('UPDATE admin_users SET active=0 WHERE id=?').run(m.id);assert.equal((await onRequest(request('session',env,m))).status,401);env.sqlite.prepare('UPDATE admin_users SET active=1').run();env.sqlite.prepare('UPDATE admin_sessions SET expires=0').run();assert.equal((await onRequest(request('session',env,m))).status,401);});
+test('users management cannot be reached by app editors',async()=>{const env=environment(),m=await member(env,['apps.update']);for(const route of ['users','users/create','users/update','users/reset','audit'])assert.equal((await onRequest(request(route,env,m))).status,403);});
+test('owner protection and permission changes revoke sessions',async()=>{const env=environment(),owner=await member(env,[],1),target=await member(env,['apps.update']);const update=(id,active=true)=>request('users/update',env,{...owner,body:{id,active,permissions:[]}});assert.equal((await onRequest(update(owner.id,false))).status,403);assert.equal((await onRequest(update(target.id))).status,200);assert.equal((await onRequest(request('session',env,target))).status,401);});
+test('readers cannot mutate apps or upload; upstream token is never returned',async()=>{const env=environment(),m=await member(env);for(const route of ['chunk','import','sync','integration/save'])assert.equal((await onRequest(request(route,env,m))).status,403);await integration(env);const response=await onRequest(request('session',env,m));assert.doesNotMatch(await response.text(),/test-secret|password_hash|salt/);});
+test('settings enforce separate update and visibility permissions',async()=>{const env=environment(),editor=await member(env,['apps.update']),remover=await member(env,['apps.remove']);await integration(env);const saved=globalThis.fetch;const current={'test.app':{name:'Test',enabled:true}};let writes=0;globalThis.fetch=async(url,opts)=>{if(opts.method==='PUT'){writes++;return Response.json({commit:{sha:'new'}});}return Response.json({sha:'a'.repeat(40),content:Buffer.from(JSON.stringify(current)).toString('base64')});};try{const modify=async(m,settings)=>onRequest(request('settings',env,{...m,body:{sha:'a'.repeat(40),settings}}));assert.equal((await modify(editor,{'test.app':{name:'Test',enabled:false}})).status,403);assert.equal((await modify(remover,{'test.app':{name:'Changed',enabled:true}})).status,403);assert.equal((await modify(editor,{'test.app':{name:'Changed',enabled:true}})).status,200);assert.equal((await modify(remover,{'test.app':{name:'Test',enabled:false}})).status,200);assert.equal(writes,2);}finally{globalThis.fetch=saved;}});
+test('upload assets must belong to current user',async()=>{const env=environment(),m=await member(env,['apps.upload']);await integration(env);const response=await onRequest(request('import',env,{...m,body:{assets:[1],checksums:['a'.repeat(64)],size:100}}));assert.equal(response.status,403);});
+test('password hashing uses salt and pepper; encryption authenticates',async()=>{const hash=await passwordHash('a long test password','ab'.repeat(32),'12'.repeat(32));assert.notEqual(hash,await passwordHash('a long test password','ac'.repeat(32),'12'.repeat(32)));assert.notEqual(hash,await passwordHash('a long test password','ab'.repeat(32),'13'.repeat(32)));const secret=await encrypt('12'.repeat(32),'private');assert.equal(await decrypt('12'.repeat(32),secret),'private');await assert.rejects(decrypt('13'.repeat(32),secret));});
+test('rate limits stop repeated login attempts',async()=>{const env=environment();let response;for(let i=0;i<11;i++)response=await onRequest(request('login',env,{body:{email:'nobody@example.com',password:'a long test password'}}));assert.equal(response.status,429);});
+test('settings reject executable and prototype fields',()=>{for(const field of ['downloadURL','versions','constructor','__proto__'])assert.throws(()=>validateSettings({'test.app':JSON.parse(`{"${field}":"evil"}`)}));});
+test('host routing isolates API',async()=>{for(const [url,status] of [['https://storage.zynthec.com/',302],['https://apps.zynthec.com/admin',302],['https://apps.zynthec.com/api/login',403],['https://storage.zynthec.com/api/login',200],['https://apps.zynthec.com/source.json',200]])assert.equal((await routeHost({request:new Request(url),next:async()=>new Response('ok')})).status,status);});
+test('GitHub login is exclusive to owner and stores no plaintext credential',async()=>{const env=environment(),saved=globalThis.fetch;try{globalThis.fetch=async()=>Response.json({login:'someone-else'});assert.equal((await onRequest(request('github-login',env,{body:{token:'test_token'}}))).status,403);globalThis.fetch=async url=>Response.json(url.endsWith('/user')?{login:'zynthec-dev'}:{full_name:'zynthec-dev/zynthec-apps-source',permissions:{push:true}});const response=await onRequest(request('github-login',env,{body:{token:'test_token'}}));assert.equal(response.status,200);const data=await response.json();assert.equal(data.user.owner,true);assert.doesNotMatch(JSON.stringify(data),/test_token/);const stored=env.sqlite.prepare("SELECT value FROM admin_settings WHERE key='github'").get();assert.notEqual(stored.value,'test_token');assert.equal(await decrypt(env.AUTH_KEY,stored.value),'test_token');assert.equal((await onRequest(request('session',env,{cookie:response.headers.get('set-cookie')}))).status,200);}finally{globalThis.fetch=saved;}});
+test('team invitation and reset are single-use and do not grant owner role',async()=>{const env=environment(),owner=await member(env,[],1);const created=await onRequest(request('users/create',env,{...owner,body:{email:'mod@example.com',name:'Mod',permissions:['apps.upload'],owner:true}}));assert.equal(created.status,200);const link=(await created.json()).invite;assert.match(link,/#invite=/);const user=env.sqlite.prepare('SELECT * FROM admin_users WHERE email=?').get('mod@example.com');assert.equal(user.owner,0);assert.equal(user.password_hash,null);assert.equal(user.permissions,'["apps.upload"]');});

@@ -2,7 +2,7 @@ const localPreview = ['127.0.0.1','localhost'].includes(location.hostname);
 if (location.protocol !== 'https:' && !localPreview) {
   location.replace('https://' + location.host + location.pathname + location.search);
 }
-let token = '';
+let currentUser = null;
 let catalog = {};
 let settings = {};
 let sha = '';
@@ -15,7 +15,7 @@ function node(tag, cls, text){const n=document.createElement(tag);if(cls)n.class
 function status(id,text,error=false){$(id).textContent=text;$(id).classList.toggle('error',error);}
 async function api(route,body={}){
   if(location.protocol!=='https:'&&!localPreview)throw new Error('Bitte öffne https://storage.zynthec.com/admin für die sichere Anmeldung.');
-  const response=await fetch(API+route,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store',redirect:'error'});
+  const response=await fetch(API+route,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body),cache:'no-store',redirect:'error'});
   let data;
   try { data=await response.json(); }
   catch {
@@ -24,15 +24,19 @@ async function api(route,body={}){
     if(response.headers.get('cf-mitigated')==='challenge')throw new Error(`Cloudflare verlangt eine Browserprüfung. Öffne die Verwaltung direkt in Safari und lade sie erneut. (${detail})`);
     throw new Error(`Der Server liefert keine gültige API-Antwort. Bitte teile diese Fehlerkennung mit: ${detail}`);
   }
-  if(!response.ok){if(response.status===401)logout();throw new Error(data.error||'Anfrage fehlgeschlagen.');}return data;
+  if(!response.ok){if(response.status===401)resetUI();throw new Error(data.error||'Anfrage fehlgeschlagen.');}return data;
 }
-function logout(){token='';catalog={};settings={};sha='';$('token').value='';$('dashboard').hidden=true;$('login-view').hidden=false;$('logout').hidden=true;document.querySelectorAll('dialog').forEach(d=>d.close());}
-$('logout').addEventListener('click',()=>{if(!busy)logout();});
+const can = right => !!currentUser && (currentUser.owner || currentUser.permissions.includes(right));
+function resetUI(){currentUser=null;catalog={};settings={};sha='';$('password').value='';$('owner-token').value='';document.querySelectorAll('[data-admin-page]').forEach(p=>p.hidden=true);$('admin-tabs').hidden=true;$('login-view').hidden=false;$('logout').hidden=true;document.querySelectorAll('dialog').forEach(d=>d.close());}
+async function enter(user){currentUser=user;$('login-view').hidden=true;$('admin-tabs').hidden=false;$('logout').hidden=false;$('account-label').textContent=`${user.name} · ${user.email}`;$('open-upload').hidden=!can('apps.upload')&&!can('apps.update');$('sync').hidden=!can('apps.update');document.querySelector('[data-admin-tab="team"]').hidden=!can('users.manage');$('integration-panel').hidden=!user.owner;$('password-panel').hidden=user.owner;await showPage('apps');}
+$('logout').addEventListener('click',async()=>{if(busy)return;try{await api('logout');resetUI();}catch(e){status('dashboard-status',e.message,true);}});
 $('login-form').addEventListener('submit',async event=>{
-  event.preventDefault();const submit=event.submitter;submit.disabled=true;token=$('token').value.trim();status('login-status','Anmeldung wird geprüft …');
-  try{await api('session');$('token').value='';await load();$('login-view').hidden=true;$('dashboard').hidden=false;$('logout').hidden=false;status('login-status','');}
-  catch(error){token='';status('login-status',error.message,true);}finally{submit.disabled=false;}
+ event.preventDefault();event.submitter.disabled=true;status('login-status','Anmeldung wird geprüft …');
+ try{const data=await api('login',{email:$('email').value,password:$('password').value});$('password').value='';await enter(data.user);}catch(e){status('login-status',e.message,true);}finally{event.submitter.disabled=false;}
 });
+const inviteToken=new URLSearchParams(location.hash.slice(1)).get('invite');
+if(inviteToken){$('login-methods').hidden=true;history.replaceState(null,'',location.pathname);$('login-form').hidden=true;$('activate-form').hidden=false;}
+$('activate-form').addEventListener('submit',async event=>{event.preventDefault();event.submitter.disabled=true;try{if($('new-password').value!==$('confirm-password').value)throw new Error('Die Passwörter stimmen nicht überein.');await api('activate',{invite:inviteToken,password:$('new-password').value});$('activate-form').reset();$('activate-form').hidden=true;$('login-methods').hidden=false;$('login-form').hidden=false;status('login-status','Account aktiviert. Du kannst dich jetzt anmelden.');}catch(e){status('login-status',e.message,true);}finally{event.submitter.disabled=false;}});
 function appFor(id){return {...catalog[id].app,...settings[id]};}
 function renderApps(){
   const list=$('admin-apps');list.replaceChildren();let visible=0;
@@ -43,7 +47,7 @@ function renderApps(){
     const info=node('div','admin-app-info');const title=node('h3','',app.name);title.append(node('span','badge',enabled?'In der Source':'Ausgeblendet'));
     info.append(title,node('p','',`v${app.versions[0].version} · ${id}`));
     const actions=node('div','admin-row-actions');const edit=node('button','','Bearbeiten');edit.addEventListener('click',()=>editApp(id));
-    const toggle=node('button',enabled?'remove':'',enabled?'Entfernen':'Wiederherstellen');toggle.addEventListener('click',()=>confirmVisibility(id));actions.append(edit,toggle);row.append(icon,info,actions);list.append(row);
+    const toggle=node('button',enabled?'remove':'',enabled?'Entfernen':'Wiederherstellen');toggle.addEventListener('click',()=>confirmVisibility(id));edit.hidden=!can('apps.update');toggle.hidden=!can('apps.remove');actions.append(edit,toggle);row.append(icon,info,actions);list.append(row);
   }
   $('visible-count').textContent=visible;$('hidden-count').textContent=Object.keys(catalog).length-visible;
 }
@@ -66,7 +70,7 @@ $('open-upload').addEventListener('click',()=>{$('upload-dialog').showModal();})
 $('ipa-file').addEventListener('change',()=>{const file=$('ipa-file').files[0];$('file-label').textContent=file?`${file.name} · ${(file.size/1048576).toFixed(1)} MB`:'Bis zu 512 MB';});
 function uploadPart(blob,upload,part,onProgress){return new Promise((resolve,reject)=>{
   if(location.protocol!=='https:'&&!localPreview){reject(new Error('Upload nur über HTTPS möglich.'));return;}
-  const xhr=new XMLHttpRequest();xhr.open('POST',`${API}chunk?upload=${upload}&part=${part}`);xhr.setRequestHeader('Authorization',`Bearer ${token}`);xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.timeout=180000;xhr.upload.onprogress=event=>onProgress(event.loaded);xhr.onerror=()=>reject(new Error('Upload unterbrochen. Prüfe deine Verbindung und starte erneut.'));xhr.ontimeout=()=>reject(new Error('Zeitüberschreitung beim Upload. Bitte erneut versuchen.'));xhr.onload=()=>{let data;try{data=JSON.parse(xhr.responseText);}catch{reject(new Error('Upload fehlgeschlagen. Bitte erneut versuchen.'));return;}xhr.status>=200&&xhr.status<300?resolve(data):reject(new Error(data.error||'Upload fehlgeschlagen.'));};xhr.send(blob);
+  const xhr=new XMLHttpRequest();xhr.open('POST',`${API}chunk?upload=${upload}&part=${part}`);xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.timeout=180000;xhr.upload.onprogress=event=>onProgress(event.loaded);xhr.onerror=()=>reject(new Error('Upload unterbrochen. Prüfe deine Verbindung und starte erneut.'));xhr.ontimeout=()=>reject(new Error('Zeitüberschreitung beim Upload. Bitte erneut versuchen.'));xhr.onload=()=>{let data;try{data=JSON.parse(xhr.responseText);}catch{reject(new Error('Upload fehlgeschlagen. Bitte erneut versuchen.'));return;}xhr.status>=200&&xhr.status<300?resolve(data):reject(new Error(data.error||'Upload fehlgeschlagen.'));};xhr.send(blob);
 });}
 async function dispatchUpload(){await api('import',pendingImport);pendingImport=null;$('retry-import').hidden=true;status('upload-status','Upload abgeschlossen. GitHub prüft die IPA und veröffentlicht sie. Du kannst dieses Fenster jetzt schließen.');status('dashboard-status','App-Import gestartet. Prüfe den Verlauf unter Veröffentlichungen.');await loadRuns();}
 $('retry-import').addEventListener('click',async()=>{if(!pendingImport||busy)return;busy=true;try{await dispatchUpload();}catch(e){status('upload-status',e.message,true);}finally{busy=false;}});
@@ -85,3 +89,24 @@ $('upload-form').addEventListener('submit',async event=>{
 });
 window.addEventListener('beforeunload',event=>{if(busy){event.preventDefault();event.returnValue='';}});
 if(location.hostname!=='storage.zynthec.com'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){status('login-status','Bitte öffne die Verwaltung unter https://storage.zynthec.com/admin.',true);$('login-form').querySelector('button').disabled=true;}
+
+const rightLabels={'apps.upload':'Neue Apps hochladen','apps.update':'Apps aktualisieren und bearbeiten','apps.remove':'Apps entfernen / wiederherstellen','users.manage':'Accounts und Rechte verwalten'};
+function rightsForm(container,selected=[]){container.replaceChildren();for(const [key,label] of Object.entries(rightLabels)){const row=node('label');const input=node('input');input.type='checkbox';input.value=key;input.checked=selected.includes(key);row.append(input,document.createTextNode(label));container.append(row);}}
+rightsForm($('user-rights'));
+const selectedRights=container=>[...container.querySelectorAll('input:checked')].map(x=>x.value);
+async function showPage(page){
+ if(page==='team'&&!can('users.manage'))return;
+ document.querySelectorAll('[data-admin-page]').forEach(p=>p.hidden=p.dataset.adminPage!==page);
+ document.querySelectorAll('[data-admin-tab]').forEach(b=>{if(b.dataset.adminTab===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+ try{if(page==='apps')await load();if(page==='team')await loadTeam();if(page==='settings'&&currentUser.owner){const result=await api('integration/status');$('integration-status').textContent=result.configured?'Source-Verbindung eingerichtet.':'Noch keine Source-Verbindung eingerichtet.';}}catch(e){status(page==='apps'?'dashboard-status':page==='team'?'team-status':'settings-status',e.message,true);}
+}
+document.querySelectorAll('[data-admin-tab]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.adminTab)));
+function showInvite(url){$('invite-result').hidden=false;$('invite-link').value=url;}
+$('copy-invite').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('invite-link').value);status('team-status','Link kopiert.');}catch{$('invite-link').select();status('team-status','Bitte den markierten Link kopieren.');}});
+async function loadTeam(){const {users}=await api('users');$('team-list').replaceChildren();for(const u of users){const row=node('article','team-row');row.append(node('h3','',u.name),node('p','',`${u.email} · ${u.owner?'Hauptadmin':u.pending?'Einrichtung offen':u.active?'Aktiv':'Gesperrt'}`));if(!u.owner&&u.id!==currentUser.id){const rights=node('div','rights');rightsForm(rights,u.permissions);const active=node('input');active.type='checkbox';active.checked=u.active;const label=node('label','rights','Account aktiv ');label.append(active);const save=node('button','button secondary','Rechte speichern');save.addEventListener('click',async()=>{save.disabled=true;try{await api('users/update',{id:u.id,permissions:selectedRights(rights),active:active.checked});await loadTeam();status('team-status','Gespeichert. Bestehende Sitzungen wurden beendet.');}catch(e){status('team-status',e.message,true);}finally{save.disabled=false;}});const reset=node('button','button secondary','Neuer Einrichtungslink');reset.addEventListener('click',async()=>{reset.disabled=true;try{const r=await api('users/reset',{id:u.id});showInvite(r.invite);}catch(e){status('team-status',e.message,true);}finally{reset.disabled=false;}});row.append(rights,label,save,reset);}$('team-list').append(row);}}
+$('user-form').addEventListener('submit',async e=>{e.preventDefault();e.submitter.disabled=true;try{const r=await api('users/create',{name:$('user-name').value,email:$('user-email').value,permissions:selectedRights($('user-rights'))});showInvite(r.invite);$('user-form').reset();await loadTeam();}catch(error){status('team-status',error.message,true);}finally{e.submitter.disabled=false;}});
+$('password-form').addEventListener('submit',async e=>{e.preventDefault();e.submitter.disabled=true;try{await api('password',{currentPassword:$('current-password').value,password:$('change-password').value});$('password-form').reset();resetUI();status('login-status','Passwort geändert. Bitte erneut anmelden.');}catch(error){status('settings-status',error.message,true);}finally{e.submitter.disabled=false;}});
+if(!inviteToken)api('session').then(data=>enter(data.user)).catch(e=>{if(!e.message.includes('anmelden'))status('login-status',e.message,true);});
+
+document.querySelectorAll('[data-login-method]').forEach(button=>button.addEventListener('click',()=>{const github=button.dataset.loginMethod==='github';$('login-form').hidden=github;$('github-login-form').hidden=!github;document.querySelectorAll('[data-login-method]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});status('login-status','');}));
+$('github-login-form').addEventListener('submit',async e=>{e.preventDefault();e.submitter.disabled=true;status('login-status','GitHub-Zugang wird geprüft …');try{const data=await api('github-login',{token:$('owner-token').value.trim()});$('owner-token').value='';await enter(data.user);}catch(error){status('login-status',error.message,true);}finally{e.submitter.disabled=false;}});

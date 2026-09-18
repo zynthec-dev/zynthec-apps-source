@@ -12,6 +12,11 @@ def validate_manifest(manifest):
         raise ValueError('Invalid file size or hash')
     return manifest
 
+def authorize_import(manifest, bundle, catalog):
+    allowed = manifest.get('allowUpdate') if bundle in catalog else manifest.get('allowNew')
+    if allowed is not True:
+        raise ValueError('This account may not update existing apps' if bundle in catalog else 'This account may not add new apps')
+
 def main():
     manifest=validate_manifest(json.loads(os.environ['UPLOAD_MANIFEST']))
     releases=[r for page in json.loads(gh('api','--paginate','--slurp',f'repos/{REPO}/releases?per_page=100')) for r in page]
@@ -38,6 +43,7 @@ def main():
         url=f'https://github.com/{REPO}/releases/download/apps/{filename}'
         app,digest=inspect_ipa(path,url,datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'))
         catalog=read(ROOT/'catalog/apps.json',{})
+        authorize_import(manifest,app['bundleIdentifier'],catalog)
         merge(catalog,app,digest)
         published=json.loads(gh('release','view','apps','--repo',REPO,'--json','assets'))['assets']
         if filename not in {a['name'] for a in published}:

@@ -3,7 +3,7 @@ from unittest.mock import patch
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT/'scripts'))
 import source
-from import_upload import validate_manifest
+from import_upload import validate_manifest, authorize_import
 class AdminTests(unittest.TestCase):
     def test_removed_app_stays_hidden_when_catalog_updates(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(source,'ROOT',pathlib.Path(tmp)):
@@ -24,3 +24,10 @@ class AdminTests(unittest.TestCase):
         self.assertEqual(validate_manifest(good),good)
         for update in [{'assets':[1,1]},{'checksums':['x']},{'size':513*1024**2},{'assets':[True]}]:
             with self.assertRaises(ValueError):validate_manifest({**good,**update})
+
+    def test_import_rights_are_checked_against_actual_bundle(self):
+        catalog={'existing.app':{}}
+        authorize_import({'allowNew':True},'new.app',catalog)
+        authorize_import({'allowUpdate':True},'existing.app',catalog)
+        for manifest,bundle in [({'allowNew':True},'existing.app'),({'allowUpdate':True},'new.app'),({},'new.app')]:
+            with self.assertRaises(ValueError): authorize_import(manifest,bundle,catalog)

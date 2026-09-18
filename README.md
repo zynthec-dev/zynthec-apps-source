@@ -12,13 +12,7 @@ Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 Öffne **https://storage.zynthec.com/admin**.
 Die öffentliche Landingpage zeigt zynthecApp sowie die Bibliothek ohne direkte IPA-Downloadbuttons.
 Der öffentliche Source-Feed enthält weiterhin die für Sideloading-Tools benötigten Download-URLs.
-`/install.html` erklärt den vorbereiteten Installationsweg; das Web-Clip-Profil installiert noch keine App. Die Anmeldung verwendet einen
-GitHub Fine-grained personal access token für `zynthec-dev`, beschränkt auf
-`zynthec-apps-source`, mit **Contents: Read and write** und
-**Actions: Read and write**. Eine Anleitung steht direkt auf der Login-Seite.
-Der Schlüssel bleibt nur im Arbeitsspeicher des Tabs und wird über die eigene
-Cloudflare-API an GitHub weitergereicht. Kein Passwort und kein Schlüssel wird
-serverseitig gespeichert. Nach Neuladen des Tabs erneut anmelden.
+`/install.html` erklärt den vorbereiteten Installationsweg; das Web-Clip-Profil installiert noch keine App. Die Anmeldung bietet zwei unabhängige Zugänge: Master-Admin über GitHub (nur `zynthec-dev`) und Team-Accounts über E-Mail und Passwort. Der Master verwaltet Accounts und Rechte; Apple-Accounts spielen dabei keine Rolle. GitHub wird zentral serverseitig angebunden. Details und die Schnittstelle für die native App stehen in [docs/admin-accounts.md](docs/admin-accounts.md).
 
 - **Hinzufügen / Update:** „App hinzufügen“ → IPA bis 512 MB auswählen →
   „Hochladen & veröffentlichen“. Metadaten und Icons werden automatisch gelesen.
@@ -35,7 +29,7 @@ IPA zusammen und veröffentlicht den vollständigen Download erst nach erfolgrei
 Metadatenprüfung. Fehlgeschlagene oder abgeschlossene Uploadteile bleiben im Entwurf
 für eine mögliche Wiederherstellung und können dort bei Bedarf manuell gelöscht werden.
 Der öffentliche `/admin`-Bildschirm enthält keine Zugangsdaten. Jede API-Anfrage
-prüft Origin, GitHub-Konto und Repository-Schreibrecht. Änderungen an Texten nutzen
+prüft Origin, Sitzung und die Berechtigung der jeweiligen Aktion. Änderungen an Texten nutzen
 GitHubs Dateiversion zur Konflikterkennung. GitHub-Pages-Besucher werden für die
 Verwaltung auf die Cloudflare-Domain verwiesen.
 

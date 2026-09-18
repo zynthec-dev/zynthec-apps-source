@@ -1,8 +1,8 @@
+import {APIError, authRoute, session, requireRight, body as readBody, encrypt, decrypt, audit, now} from '../../lib/admin-auth.js';
 const REPO = 'zynthec-dev/zynthec-apps-source';
 const API = `https://api.github.com/repos/${REPO}`;
 const LIMIT = 16 * 1024 * 1024;
 const json = (body, status = 200) => new Response(JSON.stringify(body), {status, headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"}});
-class APIError extends Error { constructor(message,status=400){super(message);this.status=status;} }
 async function limitedBody(request, max) {
   if(Number(request.headers.get('content-length')) > max) throw new APIError('Die Datei ist zu groß.',413);
   const reader=request.body?.getReader(); if(!reader) return new Uint8Array();
@@ -27,13 +27,35 @@ function validateSettings(data) {
   return result;
 }
 export {validateSettings, limitedBody};
-export async function onRequest({request,params}) {
+export async function onRequest({request,params,env}) {
   try {
     const url=new URL(request.url);
     if(request.headers.get('Origin')!==url.origin)throw new APIError('Zugriff nur über dieses Admin-Panel erlaubt.',403);
-    const token=request.headers.get('Authorization')||'';
-    if(!/^Bearer [A-Za-z0-9_]+$/.test(token))throw new APIError('Bitte mit deinem GitHub-Zugangsschlüssel anmelden.',401);
+    if(request.method!=='POST')throw new APIError('Methode nicht erlaubt.',405);
     const route=Array.isArray(params.route)?params.route.join('/'):params.route;
+    const authRoutes=['github-login','login','activate','logout','session','password','users','users/create','users/update','users/reset','audit'];
+    if(authRoutes.includes(route))return await authRoute(route,request,env);
+    if(!env?.ADMIN_DB||!env?.AUTH_KEY)throw new APIError('Account-Verwaltung nicht eingerichtet.',503);
+    const user=await session(request,env.ADMIN_DB);
+    if(['chunk','import'].includes(route)&&!user.owner&&!JSON.parse(user.permissions).some(p=>['apps.upload','apps.update'].includes(p)))throw new APIError('Kein Recht zum Hochladen oder Aktualisieren.',403);
+    if(route==='sync')requireRight(user,'apps.update');
+    if(route==='integration/status'){
+      if(!user.owner)throw new APIError('Nur der Hauptadmin darf die Verbindung verwalten.',403);
+      return json({configured:!!await env.ADMIN_DB.prepare("SELECT key FROM admin_settings WHERE key='github'").first()});
+    }
+    if(route==='integration/save'){
+      if(!user.owner)throw new APIError('Nur der Hauptadmin darf die Verbindung verwalten.',403);
+      const data=await readBody(request);
+      if(!/^github_pat_[A-Za-z0-9_]+$/.test(data.token||''))throw new APIError('Bitte einen auf dieses Repository beschränkten Fine-grained Token verwenden.');
+      const response=await fetch(API,{headers:{Authorization:'Bearer '+data.token,Accept:'application/vnd.github+json','User-Agent':'zynthec-source-admin'},redirect:'manual'});
+      if(!response.ok)throw new APIError('Der Schlüssel hat keinen Zugriff auf zynthec-dev/zynthec-apps-source. Bitte Repository-Freigabe prüfen.',400);
+      const repo=await response.json();if(repo.full_name!==REPO||!repo.permissions?.push)throw new APIError('Schreibzugriff auf das Source-Repository fehlt.',400);
+      await env.ADMIN_DB.prepare("INSERT INTO admin_settings(key,value) VALUES('github',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(await encrypt(env.AUTH_KEY,data.token)).run();
+      await audit(env.ADMIN_DB,user,'integration.save');return json({ok:true});
+    }
+    const secret=await env.ADMIN_DB.prepare("SELECT value FROM admin_settings WHERE key='github'").first();
+    if(!secret)throw new APIError('Die Source-Verbindung fehlt. Der Hauptadmin kann sie unter Einstellungen einrichten.',424);
+    const token='Bearer '+await decrypt(env.AUTH_KEY,secret.value);
     const headers={Authorization:token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'zynthec-source-admin'};
     async function github(path,{method='GET',body,raw=false}={}){
       const destination=path.startsWith('https://uploads.github.com/')?path:path.startsWith('/user')?'https://api.github.com'+path:API+path;
@@ -59,12 +81,7 @@ export async function onRequest({request,params}) {
       catch {throw new APIError(`${step}: GitHub hat keine gültige JSON-Antwort geliefert. Bitte erneut versuchen.`,424);}
 
     }
-    const user=await github('/user');
-    if(user.login!=='zynthec-dev')throw new APIError('Nur das GitHub-Konto zynthec-dev darf diese Source verwalten.',403);
-    const repo=await github('');
-    if(!repo.permissions?.push)throw new APIError('Schreibzugriff auf das Source-Repository fehlt.',403);
     const method=request.method;
-    if(route==='session'&&method==='POST')return json({login:user.login});
     if(route==='catalog'&&method==='POST'){
       const [catalog,settings]=await Promise.all([github('/contents/catalog/apps.json?ref=main'),github('/contents/apps.json?ref=main')]);
       const decode=data=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(data.content.replace(/\s/g,'')),c=>c.charCodeAt(0))));
@@ -80,25 +97,38 @@ export async function onRequest({request,params}) {
       const bytes=await limitedBody(request,LIMIT);if(!bytes.length)throw new APIError('Leere Datei.');
       const name=`${upload}-${Number(part)}.part`;
       const asset=await github(`https://uploads.github.com/repos/${REPO}/releases/${release.id}/assets?name=${name}`,{method:'POST',body:bytes,raw:true});
+      await env.ADMIN_DB.prepare('INSERT INTO admin_uploads(asset_id,user_id,expires) VALUES(?,?,?)').bind(asset.id,user.id,now()+86400).run();
       return json({id:asset.id,size:asset.size,name:asset.name});
     }
     const body=JSON.parse(new TextDecoder().decode(await limitedBody(request,100000)));
     if(route==='settings'){
       const settings=validateSettings(body.settings);
       if(!/^[0-9a-f]{40}$/.test(body.sha||''))throw new APIError('Ungültiger Versionsstand.');
+      const current=await github('/contents/apps.json?ref=main');
+      if(current.sha!==body.sha)throw new APIError('Zwischenzeitlich geändert. Bitte neu laden.',409);
+      const previous=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(current.content.replace(/\s/g,'')),c=>c.charCodeAt(0))));
+      for(const id of new Set([...Object.keys(previous),...Object.keys(settings)])){
+        const old=previous[id]||{},next=settings[id]||{};
+        if((old.enabled!==false)!==(next.enabled!==false))requireRight(user,'apps.remove');
+        const fields=new Set([...Object.keys(old),...Object.keys(next)]);fields.delete('enabled');
+        if([...fields].some(key=>old[key]!==next[key]))requireRight(user,'apps.update');
+      }
       const content=btoa(Array.from(new TextEncoder().encode(JSON.stringify(settings,null,2)+'\n'),b=>String.fromCharCode(b)).join(''));
       const result=await github('/contents/apps.json',{method:'PUT',body:{message:'Update apps from admin panel',content,sha:body.sha,branch:'main'}});
+      await audit(env.ADMIN_DB,user,'apps.settings',result.commit.sha);
       return json({commit:result.commit.sha});
     }
     if(route==='import'){
       if(!Array.isArray(body.assets)||!body.assets.length||body.assets.length>128||body.assets.some(a=>!Number.isSafeInteger(a)||a<=0))throw new APIError('Ungültige Upload-Teile.');
       if(!Array.isArray(body.checksums)||body.checksums.length!==body.assets.length||body.checksums.some(h=>!/^[0-9a-f]{64}$/.test(h))||!Number.isSafeInteger(body.size)||body.size<1||body.size>512*1024**2)throw new APIError('Ungültige Dateiprüfsumme.');
-      const manifest={assets:body.assets,checksums:body.checksums,size:body.size};
+      for(const id of body.assets){const part=await env.ADMIN_DB.prepare('SELECT asset_id FROM admin_uploads WHERE asset_id=? AND user_id=? AND expires>?').bind(id,user.id,now()).first();if(!part)throw new APIError('Upload gehört nicht zu deinem Account oder ist abgelaufen.',403);}
+      const rights=user.owner?['apps.upload','apps.update']:JSON.parse(user.permissions);
+      const manifest={assets:body.assets,checksums:body.checksums,size:body.size,allowNew:rights.includes('apps.upload'),allowUpdate:rights.includes('apps.update')};
       await github('/actions/workflows/source.yml/dispatches',{method:'POST',body:{ref:'main',inputs:{upload_manifest:JSON.stringify(manifest)}}});
-      return json({queued:true});
+      await audit(env.ADMIN_DB,user,'apps.import');return json({queued:true});
     }
     if(route==='sync'){
-      await github('/actions/workflows/source.yml/dispatches',{method:'POST',body:{ref:'main'}});return json({queued:true});
+      await github('/actions/workflows/source.yml/dispatches',{method:'POST',body:{ref:'main'}});await audit(env.ADMIN_DB,user,'apps.sync');return json({queued:true});
     }
     throw new APIError('Nicht gefunden.',404);
   }catch(error){return json({error:error instanceof SyntaxError?'Ungültige Anfrage.':error instanceof APIError?error.message:'Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen.'},error instanceof APIError?error.status:400);}
