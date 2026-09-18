@@ -1,11 +1,11 @@
 {
   "name": "zynthec Apps",
   "identifier": "com.zynthec.apps",
-  "sourceURL": "https://zynthec-dev.github.io/zynthec-ios-sideload-source/source-github.json",
+  "sourceURL": "https://zynthec-dev.github.io/zynthec-apps-source/source-github.json",
   "subtitle": "Deine Apps. Deine Wahl.",
   "description": "Die zynthec App-Sammlung für SideStore und AltStore Classic. Mit automatischen SideInstaller-Updates.",
-  "iconURL": "https://zynthec-dev.github.io/zynthec-ios-sideload-source/icon.png",
-  "website": "https://zynthec-dev.github.io/zynthec-ios-sideload-source",
+  "iconURL": "https://zynthec-dev.github.io/zynthec-apps-source/icon.png",
+  "website": "https://zynthec-dev.github.io/zynthec-apps-source",
   "tintColor": "#165C40",
   "apps": [],
   "news": []

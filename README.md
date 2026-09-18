@@ -2,19 +2,19 @@
 
 Dunkelgrüne Source für **SideStore und AltStore Classic** (kein AltStore PAL).
 
-- Landingpage und Bibliothek: https://app.zynthec.com
-- Verwaltung: https://app.zynthec.com/admin
-- Source: https://app.zynthec.com/source.json
-- IPAs: https://github.com/zynthec-dev/zynthec-ios-sideload-source/releases/tag/apps
+- Landingpage und Bibliothek: https://apps.zynthec.com
+- Verwaltung: https://storage.zynthec.com/admin
+- Source: https://apps.zynthec.com/source.json
+- IPAs: https://github.com/zynthec-dev/zynthec-apps-source/releases/tag/apps
 
 ## Online-Verwaltung
 
-Öffne **https://app.zynthec.com/admin**.
+Öffne **https://storage.zynthec.com/admin**.
 Die öffentliche Landingpage zeigt zynthecApp sowie die Bibliothek ohne direkte IPA-Downloadbuttons.
 Der öffentliche Source-Feed enthält weiterhin die für Sideloading-Tools benötigten Download-URLs.
 `/install.html` erklärt den vorbereiteten Installationsweg; das Web-Clip-Profil installiert noch keine App. Die Anmeldung verwendet einen
 GitHub Fine-grained personal access token für `zynthec-dev`, beschränkt auf
-`zynthec-ios-sideload-source`, mit **Contents: Read and write** und
+`zynthec-apps-source`, mit **Contents: Read and write** und
 **Actions: Read and write**. Eine Anleitung steht direkt auf der Login-Seite.
 Der Schlüssel bleibt nur im Arbeitsspeicher des Tabs und wird über die eigene
 Cloudflare-API an GitHub weitergereicht. Kein Passwort und kein Schlüssel wird
@@ -79,7 +79,7 @@ ab. GitHub kann Zeitpläne verzögert ausführen und bei inaktiven öffentlichen
 
 Cloudflare Pages: Projekt `zynthec-ios-app-source`, Branch `main`, Build-Befehl
 `python3 scripts/source.py render && python3 scripts/build_site.py`, Ausgabeordner `dist`, Custom Domain
-`app.zynthec.com` für Website, Verwaltung, Source-Feed und Icons; `sideload.zynthec.com` bleibt als kompatibler Alias erhalten. Beide DNS-Einträge sind proxied CNAMEs auf `zynthec-ios-app-source.pages.dev`.
+`apps.zynthec.com` für Website, Source-Feed und Icons; `storage.zynthec.com` für die Verwaltung. Die alten Domains bleiben für bestehende Source-Abonnements erreichbar. Die DNS-Einträge sind proxied CNAMEs auf `zynthec-ios-app-source.pages.dev`.
 GitHub Actions aktualisiert den Source-Feed; Cloudflare veröffentlicht die Website.
 
 Lokal: `python3 scripts/build_site.py && python3 -m http.server 8080 --directory dist`.
@@ -90,3 +90,5 @@ zuletzt synchronisierten SideInstaller-Release. `icon.png` ist das Source-Icon.
 Format: https://faq.altstore.io/developers/make-a-source
 
 Die Website hat drei Bereiche in der unteren Tableiste: Start (Source hinzufügen), zynthecApp und Bibliothek. Die bisherigen Apps sind über `enabled: false` ausgeblendet und können im Admin-Panel wiederhergestellt werden. Die Verwaltung als Tool in der nativen App ist geplant.
+
+Verwaltung: `https://storage.zynthec.com` (leitet zu `/admin`). Die API ist ausschließlich auf dieser Domain und localhost freigegeben. Öffentlich erreichbar mit GitHub-Token-Anmeldung; Tailscale/localhost-only wird später separat eingerichtet.

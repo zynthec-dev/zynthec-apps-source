@@ -1,4 +1,4 @@
-const REPO = 'zynthec-dev/zynthec-ios-sideload-source';
+const REPO = 'zynthec-dev/zynthec-apps-source';
 const API = `https://api.github.com/repos/${REPO}`;
 const LIMIT = 16 * 1024 * 1024;
 const json = (body, status = 200) => new Response(JSON.stringify(body), {status, headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"}});

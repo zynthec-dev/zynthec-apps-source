@@ -15,12 +15,12 @@ class SiteTests(unittest.TestCase):
         self.assertNotIn('downloadURL',(out/'landing-v4.js').read_text())
         self.assertNotIn('IPA herunterladen',(out/'landing-v4.js').read_text())
         for scheme in ['altstore','sidestore','livecontainer']:
-            self.assertIn(scheme+'://source?url=https%3A%2F%2Fapp.zynthec.com%2Fsource.json',html)
+            self.assertIn(scheme+'://source?url=https%3A%2F%2Fapps.zynthec.com%2Fsource.json',html)
     def test_profile_only_contains_removable_webclip(self):
         out=ROOT/'dist'; profile=plistlib.loads((out/'zynthecApp.mobileconfig').read_bytes())
         self.assertEqual(len(profile['PayloadContent']),1)
         clip=profile['PayloadContent'][0]
         self.assertEqual(clip['PayloadType'],'com.apple.webClip.managed')
         self.assertTrue(clip['IsRemovable'])
-        self.assertEqual(clip['URL'],'https://app.zynthec.com/install.html')
+        self.assertEqual(clip['URL'],'https://apps.zynthec.com/install.html')
         self.assertIn('disabled',(out/'install.html').read_text())

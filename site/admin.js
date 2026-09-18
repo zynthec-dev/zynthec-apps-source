@@ -14,7 +14,7 @@ const API = '/api/';
 function node(tag, cls, text){const n=document.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;}
 function status(id,text,error=false){$(id).textContent=text;$(id).classList.toggle('error',error);}
 async function api(route,body={}){
-  if(location.protocol!=='https:'&&!localPreview)throw new Error('Bitte öffne https://app.zynthec.com/admin für die sichere Anmeldung.');
+  if(location.protocol!=='https:'&&!localPreview)throw new Error('Bitte öffne https://storage.zynthec.com/admin für die sichere Anmeldung.');
   const response=await fetch(API+route,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store',redirect:'error'});
   let data;
   try { data=await response.json(); }
@@ -84,4 +84,4 @@ $('upload-form').addEventListener('submit',async event=>{
   }catch(e){status('upload-status',e.message,true);$('retry-import').hidden=!pendingImport;}finally{busy=false;event.submitter.disabled=false;$('logout').disabled=false;$('ipa-file').disabled=false;}
 });
 window.addEventListener('beforeunload',event=>{if(busy){event.preventDefault();event.returnValue='';}});
-if(location.hostname!=='app.zynthec.com'&&location.hostname!=='sideload.zynthec.com'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){status('login-status','Bitte öffne die Verwaltung unter https://app.zynthec.com/admin.',true);$('login-form').querySelector('button').disabled=true;}
+if(location.hostname!=='storage.zynthec.com'&&location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){status('login-status','Bitte öffne die Verwaltung unter https://storage.zynthec.com/admin.',true);$('login-form').querySelector('button').disabled=true;}

@@ -1,4 +1,4 @@
-const sourceURL = 'https://app.zynthec.com/source.json';
+const sourceURL = 'https://apps.zynthec.com/source.json';
 const container = document.querySelector('#apps');
 const sourceDialog = document.querySelector('#source-dialog');
 const appDialog = document.querySelector('#app-dialog');
@@ -13,7 +13,7 @@ function element(tag, className, text) {
 }
 function iconFor(app, className = 'app-icon') {
   const icon = element('img', className);
-  try { const url = new URL(app.iconURL, location.href); icon.src = url.origin === 'https://app.zynthec.com' ? url.pathname : url.origin === location.origin ? url.href : '/icon.png'; } catch { icon.src = '/icon.png'; }
+  try { const url = new URL(app.iconURL, location.href); icon.src = url.origin === 'https://apps.zynthec.com' ? url.pathname : url.origin === location.origin ? url.href : '/icon.png'; } catch { icon.src = '/icon.png'; }
   icon.alt = ''; icon.loading = 'lazy';
   return icon;
 }

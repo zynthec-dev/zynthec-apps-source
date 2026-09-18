@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const code=await readFile(new URL('../functions/api/[[route]].js',import.meta.url),'utf8');
 const {onRequest,validateSettings}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
-function request(route,{origin='https://app.zynthec.com',token='Bearer test_token',body={}}={}){return {params:{route:[route]},request:new Request('https://app.zynthec.com/api/'+route,{method:'POST',headers:{Origin:origin,Authorization:token,'Content-Type':'application/json'},body:JSON.stringify(body)})};}
+function request(route,{origin='https://storage.zynthec.com',token='Bearer test_token',body={}}={}){return {params:{route:[route]},request:new Request('https://storage.zynthec.com/api/'+route,{method:'POST',headers:{Origin:origin,Authorization:token,'Content-Type':'application/json'},body:JSON.stringify(body)})};}
 test('reject unauthenticated and cross-site writes before GitHub',async()=>{
  const saved=globalThis.fetch;globalThis.fetch=()=>{throw new Error('Must not contact GitHub');};
  try{assert.equal((await onRequest(request('settings',{origin:'https://evil.example'}))).status,403);assert.equal((await onRequest(request('settings',{token:''}))).status,401);}finally{globalThis.fetch=saved;}
@@ -25,7 +25,7 @@ test('upstream conflicts remain conflicts rather than overwriting',async()=>{con
 test('private repository hidden from token produces actionable access error',async()=>{
  const saved=globalThis.fetch;
  globalThis.fetch=async url=>url.endsWith('/user')?Response.json({login:'zynthec-dev'}):Response.json({message:'Not Found'},{status:404});
- try {const response=await onRequest(request('session'));assert.equal(response.status,403);const data=await response.json();assert.match(data.error,/private Repository/);assert.match(data.error,/zynthec-ios-sideload-source/);} finally {globalThis.fetch=saved;}
+ try {const response=await onRequest(request('session'));assert.equal(response.status,403);const data=await response.json();assert.match(data.error,/private Repository/);assert.match(data.error,/zynthec-apps-source/);} finally {globalThis.fetch=saved;}
 });
 test('upstream failures retain JSON diagnostics instead of generic 502',async()=>{
  const saved=globalThis.fetch;
@@ -39,4 +39,21 @@ test('upstream failures retain JSON diagnostics instead of generic 502',async()=
   globalThis.fetch=async()=>{throw new Error('connection failed with sensitive details');};
   const response=await onRequest(request('session'));assert.equal(response.status,424);assert.doesNotMatch((await response.json()).error,/sensitive/);
  } finally {globalThis.fetch=saved;}
+});
+const middlewareCode=await readFile(new URL('../functions/_middleware.js',import.meta.url),'utf8');
+const {onRequest:routeHost}=await import('data:text/javascript;base64,'+Buffer.from(middlewareCode).toString('base64'));
+test('admin host routes preserve public feed and isolate API',async()=>{
+ for(const [url,status,location] of [
+  ['https://storage.zynthec.com/',302,'https://storage.zynthec.com/admin'],
+  ['https://apps.zynthec.com/admin',302,'https://storage.zynthec.com/admin'],
+  ['https://app.zynthec.com/admin',302,'https://storage.zynthec.com/admin'],
+  ['https://apps.zynthec.com/api/session',403,null],
+  ['https://storage.zynthec.com/api/session',200,null],
+  ['https://storage.zynthec.com/admin',200,null],
+  ['https://apps.zynthec.com/source.json',200,null],
+  ['http://localhost:8788/api/session',200,null],
+ ]){
+  const response=await routeHost({request:new Request(url),next:async()=>new Response('next')});
+  assert.equal(response.status,status,url);assert.equal(response.headers.get('location'),location,url);
+ }
 });

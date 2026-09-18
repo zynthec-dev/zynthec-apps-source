@@ -1,11 +1,11 @@
 {
   "name": "zynthec Apps",
   "identifier": "com.zynthec.apps",
-  "sourceURL": "https://app.zynthec.com/source.json",
+  "sourceURL": "https://apps.zynthec.com/source.json",
   "subtitle": "Deine Apps. Deine Wahl.",
   "description": "Die zynthec App-Sammlung für SideStore und AltStore Classic. Mit automatischen SideInstaller-Updates.",
-  "iconURL": "https://app.zynthec.com/icon.png",
-  "website": "https://app.zynthec.com",
+  "iconURL": "https://apps.zynthec.com/icon.png",
+  "website": "https://apps.zynthec.com",
   "tintColor": "#165C40",
   "apps": [],
   "news": []

@@ -2,8 +2,8 @@
 """Import IPA metadata and publish an AltStore Classic / SideStore source. macOS required for icon conversion."""
 import argparse, datetime, hashlib, json, pathlib, plistlib, re, shutil, struct, subprocess, tempfile, urllib.parse, zipfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-REPO = 'zynthec-dev/zynthec-ios-sideload-source'
-BASE = 'https://app.zynthec.com'
+REPO = 'zynthec-dev/zynthec-apps-source'
+BASE = 'https://apps.zynthec.com'
 
 def hash_file(path):
     digest = hashlib.sha256()
@@ -114,8 +114,8 @@ def render(catalog):
         apps.append(app)
     source = {'name': 'zynthec Apps', 'identifier': 'com.zynthec.apps', 'sourceURL': BASE + '/source.json', 'subtitle': 'Deine Apps. Deine Wahl.', 'description': 'Die zynthec App-Sammlung für SideStore und AltStore Classic. Mit automatischen SideInstaller-Updates.', 'iconURL': BASE + '/icon.png', 'website': BASE, 'tintColor': '#165C40', 'apps': apps, 'news': []}
     write(ROOT / 'source.json', source)
-    github_source = json.loads(json.dumps(source).replace(BASE, 'https://zynthec-dev.github.io/zynthec-ios-sideload-source'))
-    github_source['sourceURL'] = 'https://zynthec-dev.github.io/zynthec-ios-sideload-source/source-github.json'
+    github_source = json.loads(json.dumps(source).replace(BASE, 'https://zynthec-dev.github.io/zynthec-apps-source'))
+    github_source['sourceURL'] = 'https://zynthec-dev.github.io/zynthec-apps-source/source-github.json'
     write(ROOT / 'source-github.json', github_source)
     write(ROOT / 'catalog/apps.json', catalog)
 
