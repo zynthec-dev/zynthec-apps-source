@@ -23,4 +23,5 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(clip['PayloadType'],'com.apple.webClip.managed')
         self.assertTrue(clip['IsRemovable'])
         self.assertEqual(clip['URL'],'https://apps.zynthec.com/install.html')
-        self.assertIn('disabled',(out/'install.html').read_text())
+        self.assertIn('install-options',(out/'install.html').read_text())
+        self.assertTrue((out/'installations.json').exists())

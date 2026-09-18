@@ -23,3 +23,11 @@
 /zynthecApp.mobileconfig
   Content-Type: application/x-apple-aspen-config
   Content-Disposition: attachment; filename="zynthecApp.mobileconfig"
+
+/install/*.plist
+  Content-Type: application/xml
+  Cache-Control: no-store
+/installations.json
+  Cache-Control: no-store
+/install.html
+  Cache-Control: no-store

@@ -45,8 +45,8 @@ function showApp(app) {
   }
   const actions = element('div', 'detail-actions');
   const add = element('button', 'button primary', 'Source hinzufügen ＋'); add.addEventListener('click', showSource);
-  actions.append(add);
-  detail.append(facts,element('p','dialog-description',description(app)),actions,element('p','detail-note','Installation über dein kompatibles Sideloading-Tool. Hier werden ausschließlich App-Informationen angezeigt.'));
+  const install=element('a','button secondary','Installation / IPA ↗');install.href='/install.html?app='+encodeURIComponent(app.bundleIdentifier);actions.append(add,install);
+  detail.append(facts,element('p','dialog-description',description(app)),actions,element('p','detail-note','Installation über dein kompatibles Sideloading-Tool. Direktinstallation nur mit gültiger Signierung und Gerätefreigabe.'));
   appDialog.showModal();
 }
 function render() {
