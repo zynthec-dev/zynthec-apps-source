@@ -21,3 +21,22 @@ test('settings reject source URLs, executable fields and prototype properties',(
  assert.throws(()=>validateSettings({'test.app':{name:'  '}}));
 });
 test('upstream conflicts remain conflicts rather than overwriting',async()=>{const saved=globalThis.fetch;globalThis.fetch=async url=>url.endsWith('/user')?Response.json({login:'zynthec-dev'}):url.endsWith('/contents/apps.json')?Response.json({message:'conflict'},{status:409}):Response.json({permissions:{push:true}});try{assert.equal((await onRequest(request('settings',{body:{sha:'a'.repeat(40),settings:{}}}))).status,409);}finally{globalThis.fetch=saved;}});
+
+test('private repository hidden from token produces actionable access error',async()=>{
+ const saved=globalThis.fetch;
+ globalThis.fetch=async url=>url.endsWith('/user')?Response.json({login:'zynthec-dev'}):Response.json({message:'Not Found'},{status:404});
+ try {const response=await onRequest(request('session'));assert.equal(response.status,403);const data=await response.json();assert.match(data.error,/private Repository/);assert.match(data.error,/zynthec-ios-sideload-source/);} finally {globalThis.fetch=saved;}
+});
+test('upstream failures retain JSON diagnostics instead of generic 502',async()=>{
+ const saved=globalThis.fetch;
+ try {
+  for(const status of [301,404,429,500,502,503]){
+   globalThis.fetch=async()=>new Response('upstream html',{status});
+   const response=await onRequest(request('session'));assert.equal(response.status,424);assert.match((await response.json()).error,new RegExp(String(status)));
+  }
+  globalThis.fetch=async()=>new Response('<html>invalid</html>');
+  assert.match((await (await onRequest(request('session'))).json()).error,/JSON/);
+  globalThis.fetch=async()=>{throw new Error('connection failed with sensitive details');};
+  const response=await onRequest(request('session'));assert.equal(response.status,424);assert.doesNotMatch((await response.json()).error,/sensitive/);
+ } finally {globalThis.fetch=saved;}
+});

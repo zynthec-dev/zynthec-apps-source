@@ -37,9 +37,27 @@ export async function onRequest({request,params}) {
     const headers={Authorization:token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'zynthec-source-admin'};
     async function github(path,{method='GET',body,raw=false}={}){
       const destination=path.startsWith('https://uploads.github.com/')?path:path.startsWith('/user')?'https://api.github.com'+path:API+path;
-      const response=await fetch(destination,{method,headers:{...headers,...(body?{'Content-Type':raw?'application/octet-stream':'application/json'}:{})},body:body?(raw?body:JSON.stringify(body)):undefined,redirect:'manual'});
-      if(!response.ok){const status=response.status;throw new APIError(status===401?'Zugangsschlüssel ungültig oder abgelaufen.':status===403?'GitHub verweigert den Zugriff. Prüfe Contents und Actions: Read and write.':status===409||status===422?'Zwischenzeitlich geändert oder Upload bereits vorhanden. Bitte neu laden.':`GitHub-Anfrage fehlgeschlagen (${status}).`,status===401?401:status===403?403:status===409||status===422?409:502);}
-      return response.status===204?null:response.json();
+      const step=path==='/user'?'GitHub-Konto':path===''?'Repository-Zugriff':'GitHub-Anfrage';
+      let response;
+      try {
+        response=await fetch(destination,{method,headers:{...headers,...(body?{'Content-Type':raw?'application/octet-stream':'application/json'}:{})},body:body?(raw?body:JSON.stringify(body)):undefined,redirect:'manual',signal:AbortSignal.timeout(20000)});
+      } catch {
+        throw new APIError(`${step}: GitHub ist derzeit nicht erreichbar oder antwortet zu langsam. Bitte erneut versuchen.`,424);
+      }
+      if(!response.ok){
+        const status=response.status;
+        if(status===401)throw new APIError('Zugangsschlüssel ungültig oder abgelaufen.',401);
+        if(status===404 && path==='')throw new APIError(`Dein Schlüssel kann das private Repository ${REPO} nicht sehen. Prüfe im Fine-grained Token den Resource owner zynthec-dev und die Freigabe genau dieses Repositorys.`,403);
+        if(status===403)throw new APIError(`${step}: GitHub verweigert den Zugriff. Prüfe die Token-Freigabe für ${REPO} sowie Contents und Actions: Read and write.`,403);
+        if(status===409||status===422)throw new APIError('Zwischenzeitlich geändert oder Upload bereits vorhanden. Bitte neu laden.',409);
+        if(status>=300&&status<400)throw new APIError(`${step}: GitHub meldet eine Weiterleitung (HTTP ${status}). Die Repository-Konfiguration muss geprüft werden.`,424);
+        // Keep dependency failures distinguishable from an edge/proxy 502 page.
+        throw new APIError(`${step} fehlgeschlagen (GitHub HTTP ${status}). Bitte diese Meldung zur Diagnose weitergeben.`,424);
+      }
+      if(response.status===204)return null;
+      try {return await response.json();}
+      catch {throw new APIError(`${step}: GitHub hat keine gültige JSON-Antwort geliefert. Bitte erneut versuchen.`,424);}
+
     }
     const user=await github('/user');
     if(user.login!=='zynthec-dev')throw new APIError('Nur das GitHub-Konto zynthec-dev darf diese Source verwalten.',403);
