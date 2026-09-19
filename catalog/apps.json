@@ -193,7 +193,7 @@
     }
   },
   "com.frizzlem.sideinstaller": {
-    "sha256": "0bf74b00c9643ee3380caa0483b45365bceb96fbb7b2c80f833c12a66e5df336",
+    "sha256": "0099de5391502fe7bda3a44ee13ee70e5decb2ccba0c53301b63a2a0729f62d4",
     "app": {
       "name": "SideInstaller",
       "bundleIdentifier": "com.frizzlem.sideinstaller",
@@ -202,6 +202,15 @@
       "iconURL": "https://apps.zynthec.com/assets/icons/45343518de3870e4.png",
       "tintColor": "#165C40",
       "versions": [
+        {
+          "version": "1.1.0",
+          "buildVersion": "1",
+          "date": "2026-09-19T13:41:50Z",
+          "downloadURL": "https://github.com/FrizzleM/SideInstaller/releases/download/v1.1.0/SideInstaller.ipa",
+          "size": 9252798,
+          "minOSVersion": "18.0",
+          "localizedDescription": "- Strongly optimized the install process\r\n   - It can now be as short as 11.1s in ideal conditions\r\n- Fixed a bug in Side by Side #52 "
+        },
         {
           "version": "1.0.0",
           "buildVersion": "9",
